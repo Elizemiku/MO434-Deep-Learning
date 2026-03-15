@@ -77,6 +77,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*:Zone.Identifier
 
 # IPython
 profile_default/
@@ -205,3 +206,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Files related to the MO434 Deep Learning course,
+# which may contain large datasets, images, notebooks,
+# and other files that are not necessary to include in version control.
+MO434-Deep-Learning-files/*
+Exercises/housing/*
+Exercises/images/*
+# MO434-Deep-Learning-files/images.tar.bz2
+# MO434-Deep-Learning-files/notebooks-MO434/*/
+# MO434-Deep-Learning-files/datasets/*/
+# MO434-Deep-Learning-files/figs/*/
+# MO434-Deep-Learning-files/lectures/*/

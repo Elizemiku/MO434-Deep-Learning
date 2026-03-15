@@ -1,0 +1,51 @@
+name: mo434
+channels:
+  - conda-forge
+  - defaults
+  - pytorch
+  - huggingface
+dependencies:
+  - python=3.12
+  # PyTorch CPU
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch::torchaudio
+  - pytorch::cpuonly
+  # Data Science
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - scipy
+  - pillow
+  # Jupyter
+  - jupyter
+  - jupyterlab
+  - ipykernel
+  - ipywidgets
+  # Huggingface
+  - transformers
+  - datasets
+  - tokenizers
+  - huggingface_hub
+  - accelerate
+  # Utilitários
+  - tqdm
+  - requests
+  - filelock
+  - packaging
+  - pyyaml
+  - einops
+  - pip
+  - pip:
+      - tensorflow-cpu
+      - keras
+      - opencv-python
+      - torchsummary
+      - nltk
+      - gensim
+      - safetensors
+      - umap-learn
+      - scikit-image
+prefix: /home/elizemiku/miniconda3/envs/mo434
