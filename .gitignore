@@ -218,3 +218,6 @@ Exercises/images/*
 # MO434-Deep-Learning-files/datasets/*/
 # MO434-Deep-Learning-files/figs/*/
 # MO434-Deep-Learning-files/lectures/*/
+
+#pdf
+*.pdf
