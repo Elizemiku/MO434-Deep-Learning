@@ -17,7 +17,7 @@ from Project.kd_utils import set_seed, Timer
 from transforms import ImageTransforms
 from load_datasets import DatasetManager
 
-from .models import (
+from Project.models import (
     conv_block, ResBlock,
     PlainCNNEncoder, DepthwiseCNNEncoder, MiniResNetEncoder,
     TeacherWrapper,
