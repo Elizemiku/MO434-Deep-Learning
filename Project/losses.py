@@ -1,8 +1,8 @@
 # losses.py
 # Funcoes de perda para Knowledge Distillation - MO434
 #
-#   PerdaKD   - perda combinada MSE + Cross-Entropy          (Q4)
-#   PerdaRKD  - Relational Knowledge Distillation (Park 2019) (Q5)
+#   PerdaKD   - perda combinada MSE + Cross-Entropy         
+#   PerdaRKD  - Relational Knowledge Distillation 
 
 import torch
 import torch.nn as nn
@@ -11,12 +11,12 @@ import torch.nn.functional as F
 
 class PerdaKD(nn.Module):
     """
-    Perda combinada MSE + Cross-Entropy para Knowledge Distillation (Q4).
+    Perda combinada MSE + Cross-Entropy para Knowledge Distillation.
 
     Formula:
         L_total = alpha * L_MSE + (1 - alpha) * L_CE
 
-      - L_MSE: alinha features do student com features do teacher (distilacao)
+      - L_MSE: alinha features do student com features do teacher (destilacao)
       - L_CE:  mantém previsoes alinhadas com rotulos verdadeiros (supervisao)
       - alpha: hiperparametro para balancear os dois objetivos
 
@@ -47,12 +47,11 @@ class PerdaRKD(nn.Module):
     Relational Knowledge Distillation - RKD (Park et al., CVPR 2019).
 
     Ao inves de alinhar valores absolutos de features (como o MSE faz),
-    alinha as relacoes entre amostras (distancias par-a-par):
+    essa funcao alinha as relacoes entre amostras (distancias par-a-par):
 
-    > "Amostras similares no espaco do teacher devem ser similares
-    >  no espaco do student"
+    "Amostras similares no espaco do teacher devem ser similares no espaco do student"
 
-    Isso e invariante a escala das features e pode ser mais robusto quando
+    A escala das features e pode ser mais robusta quando
     o student tem capacidade menor que o teacher (capacity mismatch).
 
     Referencia: https://arxiv.org/abs/1904.05068

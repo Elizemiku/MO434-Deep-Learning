@@ -1,5 +1,5 @@
 # evaluator.py
-# Avaliacao final do student (Fase 3) e metricas de eficiencia - MO434
+# Avaliacao final do student e metricas de eficiencia
 
 import numpy as np
 import torch
@@ -7,7 +7,7 @@ import torch
 
 class Evaluator:
     """
-    Avaliacao final do student (Fase 3) e calculo de metricas de eficiencia.
+    Avaliacao final do student e calculo de metricas de eficiencia.
     """
 
     def __init__(self, device):
@@ -16,12 +16,12 @@ class Evaluator:
     @torch.no_grad()
     def avaliar_fase3(self, student, teacher, loader_test, modo_target='post_gap'):
         """
-        Avaliacao definitiva (Fase 3): usa classificador do teacher para avaliar student.
+        Usa classificador do teacher para avaliar student.
 
         O classificador nunca viu as features do student durante o treinamento.
         Se o student aprendeu bem as representacoes, o classificador do teacher
-        conseguira classificar as predicoes do student com alta acuracia
-        (transferencia real de conhecimento).
+        deve conseguir classificar as predicoes do student com alta acuracia
+        (transferencia de conhecimento).
 
         Retorna (top1_acc, top5_acc).
         """

@@ -20,7 +20,7 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-from kd_helpers import set_seed
+from Project.kd_utils import set_seed
 from losses import PerdaKD, PerdaRKD
 from models import PlainCNNEncoder, PreditorPostGAP, StudentModel
 

@@ -1,17 +1,5 @@
 # datasets.py
 # Carregamento e gestao dos datasets do projeto - MO434
-#
-# Por que usar 2 datasets?
-# O enunciado exige multiplos datasets para garantir que os resultados sejam
-# generalizaveis e nao especificos de um unico dominio.
-#
-# Datasets disponibilizados:
-#   flowers102: 102 classes de flores, ~8.000 imagens em resolucao variada
-#               splits oficiais: train (1020), val (1020), test (6149)
-#               ideal para Q1: fine-grained, ConvNeXt tende a se sair melhor
-#
-#   pets:       Oxford-IIIT-Pet, 37 racas de caes e gatos, ~7.000 imagens
-#               testa transferencia em classificacao de granularidade fina com menos dados
 
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, random_split
@@ -23,10 +11,6 @@ from transforms import ImageTransforms
 class DatasetManager:
     """
     Carregamento e gestao dos datasets do projeto.
-
-    Por que usar 2 datasets?
-    O enunciado exige multiplos datasets para garantir que os resultados sejam
-    generalizaveis e nao especificos de um unico dominio.
 
     Datasets disponibilizados:
     - flowers102: 102 classes de flores, ~8.000 imagens em resolucao variada

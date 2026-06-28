@@ -1,11 +1,5 @@
-# kd_utils.py
-# Ponto de entrada unico do projeto KD - MO434
-#
-# Fachada que re-exporta tudo dos modulos especializados.
-# O notebook importa apenas deste arquivo; nada precisa mudar la.
-#
-# Estrutura de modulos:
-#   kd_helpers.py      -> set_seed, Timer
+# Chama a estrutura de modulos:
+#   kd_utils.py        -> set_seed, Timer
 #   transforms.py      -> ImageTransforms
 #   datasets.py        -> DatasetManager
 #   models/
@@ -18,12 +12,12 @@
 #   evaluator.py       -> Evaluator
 #   visualization.py   -> plotar_curvas, plotar_comparacao_mse_rkd, plotar_graficos_analise
 
-from kd_helpers import set_seed, Timer
+from Project.kd_utils import set_seed, Timer
 
 from transforms import ImageTransforms
-from datasets import DatasetManager
+from load_datasets import DatasetManager
 
-from models import (
+from .models import (
     conv_block, ResBlock,
     PlainCNNEncoder, DepthwiseCNNEncoder, MiniResNetEncoder,
     TeacherWrapper,

@@ -1,4 +1,4 @@
-# kd_helpers.py
+# kd_utils.py
 # Classes auxiliares do projeto MO434 - Knowledge Distillation
 #
 #   set_seed  - fixa semente de aleatoriedade para reproducibilidade
@@ -11,11 +11,6 @@ import functools
 import numpy as np
 import torch
 
-
-# =============================================================================
-# REPRODUCIBILIDADE
-# =============================================================================
-
 def set_seed(seed: int = 42):
     """
     Fixa a semente de aleatoriedade em todos os modulos relevantes para garantir
@@ -26,11 +21,6 @@ def set_seed(seed: int = 42):
       - random   (Python stdlib)
       - numpy    (operacoes de array)
       - torch    (CPU e CUDA)
-
-    Por que reproducibilidade importa em KD?
-    A comparacao entre teachers (Q1), arquiteturas (Q3) e alphas (Q4) so e
-    valida se todas as condicoes iniciais forem iguais. Sem seed fixa, variações
-    aleatorias nos pesos iniciais e na ordem dos batches contaminam os resultados.
 
     Parametros:
       seed: valor da semente (padrao=42). Deve ser o mesmo em todos os experimentos.

@@ -1,9 +1,9 @@
 # visualization.py
-# Graficos e visualizacoes para analise dos experimentos de KD - MO434
+# Graficos e visualizacoes para analise dos experimentos 
 #
-#   plotar_curvas               - loss, acuracia e gap de generalizacao por epoca
-#   plotar_comparacao_mse_rkd   - comparacao de curvas MSE vs RKD (Q5)
-#   plotar_graficos_analise     - graficos finais respondendo Q1, Q3, Q4
+#   plotar_curvas              loss, acuracia e gap de generalizacao por epoca
+#   plotar_comparacao_mse_rkd  comparacao de curvas MSE vs RKD
+#   plotar_graficos_analise    graficos finais respondendo Q1, Q3, Q4
 
 import matplotlib.pyplot as plt
 import numpy as np
