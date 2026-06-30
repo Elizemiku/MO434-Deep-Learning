@@ -219,6 +219,11 @@ Exercises/images/*
 # MO434-Deep-Learning-files/figs/*/
 # MO434-Deep-Learning-files/lectures/*/
 
+# tar 
+*.tar.gz
+*.tgz
+*.pth
+
 #pdf
 *.pdf
 
@@ -233,3 +238,6 @@ Exercises/images/*
 
 #arquivos de imagens do dataset
 MO434-Deep-Learning-files/Project/data/*
+
+#conda
+miniconda.sh
