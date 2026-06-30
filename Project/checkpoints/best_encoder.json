@@ -1,0 +1,5 @@
+{
+  "convnext_small": "PlainCNN",
+  "resnet50": "Depthwise",
+  "vgg16": "PlainCNN"
+}

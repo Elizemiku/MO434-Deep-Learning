@@ -1,0 +1,50 @@
+{
+  "resnet50": {
+    "flowers102": {
+      "acc_test": 0.3067357513107784,
+      "acc_top5": 0.5910945596472587,
+      "params_M": 1.229504,
+      "encoder": "Depthwise",
+      "melhor_acc_val": 0.3748604916036129
+    },
+    "pets": {
+      "acc_test": 0.23994565217391303,
+      "acc_top5": 0.5950051759896071,
+      "params_M": 1.229504,
+      "encoder": "Depthwise",
+      "melhor_acc_val": 0.31657608695652173
+    }
+  },
+  "vgg16": {
+    "flowers102": {
+      "acc_test": 0.2765867876882998,
+      "acc_top5": 0.5564443005799012,
+      "params_M": 0.783136,
+      "encoder": "PlainCNN",
+      "melhor_acc_val": 0.33830915205180645
+    },
+    "pets": {
+      "acc_test": 0.37734213251134624,
+      "acc_top5": 0.758385093315788,
+      "params_M": 0.783136,
+      "encoder": "PlainCNN",
+      "melhor_acc_val": 0.3763586956521739
+    }
+  },
+  "convnext_small": {
+    "flowers102": {
+      "acc_test": 0.06590025906735751,
+      "acc_top5": 0.24834844562673816,
+      "params_M": 0.914464,
+      "encoder": "PlainCNN",
+      "melhor_acc_val": 0.0927734375
+    },
+    "pets": {
+      "acc_test": 0.2453804347826087,
+      "acc_top5": 0.6019280538610791,
+      "params_M": 0.914464,
+      "encoder": "PlainCNN",
+      "melhor_acc_val": 0.296195652173913
+    }
+  }
+}

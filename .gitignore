@@ -221,3 +221,9 @@ Exercises/images/*
 
 #pdf
 *.pdf
+
+#jpg
+*.jpg
+
+#png
+*.png
