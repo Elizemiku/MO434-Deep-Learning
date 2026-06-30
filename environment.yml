@@ -455,4 +455,4 @@ dependencies:
       - xmltodict==0.14.2
       - yarg==0.1.9
       - yt-dlp==2025.7.21
-prefix: /home/elizemiku/miniconda3/envs/mo434
+prefix: /home/beth/miniconda3/envs/mo434

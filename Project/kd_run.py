@@ -12,12 +12,12 @@
 #   evaluator.py       -> Evaluator
 #   visualization.py   -> plotar_curvas, plotar_comparacao_mse_rkd, plotar_graficos_analise
 
-from Project.kd_utils import set_seed, Timer
+from kd_utils import set_seed, Timer
 
 from transforms import ImageTransforms
 from load_datasets import DatasetManager
 
-from Project.models import (
+from models import (
     conv_block, ResBlock,
     PlainCNNEncoder, DepthwiseCNNEncoder, MiniResNetEncoder,
     TeacherWrapper,
