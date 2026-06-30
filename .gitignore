@@ -230,3 +230,6 @@ Exercises/images/*
 
 #xml
 *.xml
+
+#arquivos de imagens do dataset
+MO434-Deep-Learning-files/Project/data/*
