@@ -227,3 +227,6 @@ Exercises/images/*
 
 #png
 *.png
+
+#xml
+*.xml
