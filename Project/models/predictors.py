@@ -9,6 +9,18 @@
 
 import torch.nn as nn
 
+# mapa de funcoes de ativacao suportadas pelo preditor MLP
+# ReLU: grad=1 para x>0, sem saturacao, padrao em ConvNets
+# GELU: x * Phi(x), suave e continua, padrao em Transformers (GPT, BERT)
+# SiLU: x * sigmoid(x) = Swish, usada em EfficientNet/MobileNetV3
+#       gradiente mais rico que ReLU, util quando o espaco de features
+#       tem estrutura complexa de alta dimensao (ex: ResNet50 feat_dim=2048)
+_ACTIVATIONS = {
+    'relu': nn.ReLU,
+    'gelu': nn.GELU,
+    'silu': nn.SiLU,
+}
+
 
 class PreditorPostGAP(nn.Module):
     """
@@ -18,14 +30,22 @@ class PreditorPostGAP(nn.Module):
       Alvo: vetor [B, C_t]
       Arquitetura: MLP com camada oculta
       Vantagem: simples, dimensao baixa
+
+    O parametro `activation` permite trocar ReLU por GELU ou SiLU:
+      - 'relu' (padrao): rapido, sem saturacao, padrao historico
+      - 'gelu': gradiente suave (usado em BERT/GPT), pode ajudar
+                em espacos de features de alta dimensao
+      - 'silu': Swish — similar ao GELU, bom em redes de imagem
     """
-    def __init__(self, dim_student: int, dim_teacher: int, dim_hidden: int = 512):
+    def __init__(self, dim_student: int, dim_teacher: int,
+                 dim_hidden: int = 512, activation: str = 'relu'):
         super().__init__()
+        act_cls = _ACTIVATIONS.get(activation.lower(), nn.ReLU)
         self.gap = nn.AdaptiveAvgPool2d(1)
         self.mlp = nn.Sequential(
             nn.Flatten(),
             nn.Linear(dim_student, dim_hidden),
-            nn.ReLU(),
+            act_cls(),
             nn.Linear(dim_hidden, dim_teacher),  # projeta para espaco do teacher
         )
 

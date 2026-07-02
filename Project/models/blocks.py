@@ -33,6 +33,36 @@ def conv_block(c_in, c_out, stride=1, dw=False):
         )
 
 
+class SEBlock(nn.Module):
+    """
+    Squeeze-and-Excitation block (Hu et al., CVPR 2018).
+
+    Recalibra a resposta de cada canal aplicando atencao global:
+      1. Squeeze: GAP -> vetor [B, C] (contexto global de cada canal)
+      2. Excitation: 2 camadas FC -> pesos de atencao por canal em (0,1)
+      3. Scale: multiplica cada canal pelo seu peso
+
+    Funciona como um filtro adaptativo sobre os mapas de features:
+    canais mais discriminativos para a tarefa ganham maior peso.
+    Adiciona apenas 2*C*C/r parametros extras (r=reducao, padrao=16).
+    """
+    def __init__(self, channels: int, reduction: int = 16):
+        super().__init__()
+        hidden = max(channels // reduction, 4)
+        self.se = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Flatten(),
+            nn.Linear(channels, hidden, bias=False),
+            nn.ReLU(),
+            nn.Linear(hidden, channels, bias=False),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x):
+        w = self.se(x).view(-1, x.size(1), 1, 1)
+        return x * w   # repondera canais pelo mapa de atencao aprendido
+
+
 class ResBlock(nn.Module):
     """
     Bloco residual: y = F(x) + x (skip connection).

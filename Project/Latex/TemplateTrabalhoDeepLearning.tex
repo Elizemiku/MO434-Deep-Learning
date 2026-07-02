@@ -1,0 +1,160 @@
+\documentclass[11pt, letterpaper]{article}
+
+%% Pacotes de Idioma e Codificação
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Pacotes de Layout e Fontes
+\usepackage[top=28mm, bottom=28mm, left=15mm, right=15mm]{geometry}
+\usepackage{fontspec}
+\setmainfont{Arial}
+\setlength{\parindent}{2em}
+\renewcommand{\baselinestretch}{1.5}
+
+%% Pacotes Matemáticos e Técnicos
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools, bm, dsfont}
+\usepackage{algorithm} 
+\usepackage{algpseudocode} 
+
+%% Pacotes de Elementos Visuais
+\usepackage{graphicx}
+\usepackage{booktabs, array, multirow}
+\usepackage{caption}
+\usepackage[section]{placeins} % Impede que figuras flutuem para outras seções
+\usepackage[many]{tcolorbox}
+\usepackage{xcolor}
+
+%% Referências e Hiperlinks
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{url}
+\usepackage{natbib}
+
+\hypersetup{
+    citecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 1.1 - PÁGINA DE CAPA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\thispagestyle{empty}
+\begin{center}
+    
+    \vspace*{-1.5cm}
+    \hspace*{-0.1cm} {\rule[-1ex]{16cm}{0.01cm}}
+    \begin{center}
+    \hspace{0.2cm}
+    \begin{minipage}[s]{2.8cm}
+    % Certifique-se de que os arquivos de imagem existam na pasta Figuras/
+    \includegraphics[width=2.8cm]{Figuras/logounicamp.eps} 
+    \end{minipage}
+    \begin{minipage}[s]{11cm}
+    {
+        \begin{center} 
+        {\LARGE Universidade Estadual de Campinas}\\ \vspace{0.2 cm}
+        {Instituto de Matemática, Estatística e Computação Científica }\\ \vspace{0.1 cm}
+        {Departamento de Matemática Aplicada}
+        \end{center}
+    }
+    \end{minipage}
+    \begin{minipage}[s]{3cm}
+        \includegraphics[width=2.3cm]{Figuras/logoimecc.eps}
+    \end{minipage}
+    \end{center}
+
+\vspace{2 cm}
+
+% Nome da Disciplina (Exigência 1.1)
+\large{\textbf{Nome da Disciplina: [Inserir Nome da Disciplina]}} \\
+
+\vspace{1 cm}
+
+%% Título do Trabalho
+\LARGE{
+\textbf{Solução Problemas de Programação Matemática \\ 
+de Grande Porte via Métodos de Pontos Interiores}
+\\}
+
+\vspace{2.5cm}
+
+% Informações do Aluno (Exigência 1.1)
+\large
+{Aluno: Aluno A \hspace{0.5cm} RA: 5879671 }\\
+\vspace{0.5cm}
+{Data de Entrega: \today} % Altere para a data específica se necessário
+
+\vspace{1.5cm}
+
+\begin{abstract}
+\normalsize
+\textbf{Resumo das Técnicas e Resultados:} Utilizando os métodos de pontos interiores para otimização linear como solução para resolver grandes problemas que envolvem matrizes esparsas, analisamos a redução do tempo computacional por iteração entre os projetos PCx0 e PCx13, reduzindo o número de iterações para alcançar a convergência de métodos e o desenvolvimento de métodos para problemas específicos com estruturas particulares.
+\end{abstract}
+
+\end{center}
+
+\newpage
+\pagenumbering{arabic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% 1.2 - PÁGINAS SUBSEQUENTES %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Fundamentação Teórica e Literatura}
+Apresente aqui a revisão bibliográfica e a literatura estudada para a implementação da tarefa. Cite os autores e métodos relevantes utilizando o formato adequado.
+
+\section{Implementação e Metodologia}
+Descreva aqui os detalhes técnicos da execução do projeto.
+
+\subsection{Algoritmos Implementados}
+Utilize o ambiente de algoritmos para descrever sua lógica:
+
+\begin{algorithm}
+\caption{Método de Pontos Interiores (Exemplo)}
+\begin{algorithmic}[1]
+\State Inicializar $x^0, s^0 > 0$
+\While{Critério de parada não satisfeito}
+    \State Calcular direções de busca $\Delta x, \Delta s$
+    \State Atualizar variáveis com passo $\alpha$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Dificuldades Encontradas e Soluções Propostas}
+Relate os obstáculos técnicos ou teóricos e como foram superados durante o desenvolvimento.
+
+\section{Resultados e Discussão}
+Apresente aqui os resultados quantitativos e qualitativos.
+
+\begin{table}[h]
+\centering
+\caption{Comparação de performance entre PCx0 e PCx13.}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Métrica & PCx0 & PCx13 \\ \midrule
+Tempo Médio (s) & 150.5 & 85.2 \\
+Iterações & 45 & 28 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+%\includegraphics[width=0.6\textwidth]{Figuras/grafico_convergencia.png}
+\caption{Discussão sobre a convergência dos métodos implementados.}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 1.3 - PÁGINA FINAL %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\section{Conclusão}
+Apresente as considerações finais sobre o que foi realizado na tarefa, destacando se os objetivos iniciais foram atingidos e a relevância dos resultados obtidos para problemas de grande porte.
+
+\section{Sugestões para Aprimoramento}
+Enumere possíveis melhorias para trabalhos futuros, como otimização de novos parâmetros, uso de diferentes estruturas de dados para matrizes esparsas ou integração com outras técnicas de deep learning.
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{referencias} % Certifique-se de ter um arquivo referencias.bib
+
+\end{document}

@@ -1,8 +1,10 @@
 # losses.py
 # Funcoes de perda para Knowledge Distillation - MO434
 #
-#   PerdaKD   - perda combinada MSE + Cross-Entropy         
-#   PerdaRKD  - Relational Knowledge Distillation 
+#   PerdaKD        - perda combinada MSE + Cross-Entropy
+#   PerdaRKD       - Relational Knowledge Distillation (Park et al. 2019)
+#   PerdaKDCosine  - Cosine Embedding Loss + CE (invariante a escala)
+#   PerdaKDCKA     - Centered Kernel Alignment (Kornblith et al. 2019)
 
 import torch
 import torch.nn as nn
@@ -82,3 +84,64 @@ class PerdaRKD(nn.Module):
         sim_s = fs_norm @ fs_norm.T       # similaridade coseno: [B, B]
         sim_t = ft_norm @ ft_norm.T
         return F.mse_loss(sim_s, sim_t)
+
+
+class PerdaKDCosine(nn.Module):
+    """
+    Destilacao via Cosine Embedding Loss + Cross-Entropy.
+
+    Vantagem sobre MSE: alinha a *direcao* do vetor de features,
+    ignorando a magnitude. Isso e util quando:
+      - teacher usa LayerNorm antes do classificador (ConvNeXt)
+      - student tem capacidade menor (nao consegue reproduzir magnitudes exatas)
+      - as escalas dos dois espacos de features sao muito diferentes
+
+    Formula:  L = (1 - cos(f_s, f_t)) + alpha_ce * L_CE
+
+    Referencia relacionada: Kim et al., CVPR 2018 (Paraphrasing Complex Network)
+    """
+    def __init__(self, alpha_ce: float = 1.0):
+        super().__init__()
+        self.alpha_ce = alpha_ce
+
+    def forward(self, pred_student, feat_teacher, logits, labels):
+        target = pred_student.new_ones(pred_student.size(0))  # maximizar similaridade
+        l_cos = F.cosine_embedding_loss(pred_student, feat_teacher, target)
+        l_ce  = F.cross_entropy(logits, labels)
+        return l_cos + self.alpha_ce * l_ce, l_cos.item(), l_ce.item()
+
+
+class PerdaKDCKA(nn.Module):
+    """
+    Centered Kernel Alignment (CKA) como perda de destilacao.
+
+    CKA mede a similaridade entre dois espacos de representacao de forma
+    invariante a transformacoes ortogonais e isotropicas de escala.
+    Isso o torna mais adequado que MSE quando teacher e student tem
+    espacos de features com estruturas geometricas muito diferentes.
+
+    Formula linear (sem kernel):
+        CKA(X, Y) = ||Y^T X||_F^2 / (||X^T X||_F * ||Y^T Y||_F)
+
+    L_CKA = 1 - CKA(F_student, F_teacher)  (minimizar dissimilaridade)
+
+    Referencia: Kornblith et al., ICML 2019
+                "Similarity of Neural Network Representations Revisited"
+    """
+    def __init__(self, alpha_ce: float = 1.0):
+        super().__init__()
+        self.alpha_ce = alpha_ce
+
+    def _cka_linear(self, X, Y):
+        """CKA linear centrado entre X e Y (ambos [B, D])."""
+        # centraliza as features no batch
+        X = X - X.mean(0, keepdim=True)
+        Y = Y - Y.mean(0, keepdim=True)
+        num   = (Y.T @ X).norm(p='fro').pow(2)
+        denom = (X.T @ X).norm(p='fro') * (Y.T @ Y).norm(p='fro') + 1e-8
+        return num / denom
+
+    def forward(self, pred_student, feat_teacher, logits, labels):
+        l_cka = 1.0 - self._cka_linear(pred_student, feat_teacher)
+        l_ce  = F.cross_entropy(logits, labels)
+        return l_cka + self.alpha_ce * l_ce, l_cka.item(), l_ce.item()

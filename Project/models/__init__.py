@@ -4,13 +4,13 @@
 # Uso:
 #   from models import TeacherWrapper, PlainCNNEncoder, StudentModel, ...
 
-from models.blocks import conv_block, ResBlock
+from models.blocks import conv_block, ResBlock, SEBlock
 from models.encoders import PlainCNNEncoder, DepthwiseCNNEncoder, MiniResNetEncoder
 from models.teacher import TeacherWrapper
 from models.predictors import PreditorPostGAP, PreditorPreGAP, StudentModel
 
 __all__ = [
-    'conv_block', 'ResBlock',
+    'conv_block', 'ResBlock', 'SEBlock',
     'PlainCNNEncoder', 'DepthwiseCNNEncoder', 'MiniResNetEncoder',
     'TeacherWrapper',
     'PreditorPostGAP', 'PreditorPreGAP', 'StudentModel',

@@ -221,12 +221,16 @@ class Trainer:
         pred_student = student(imgs)   # [B, C_t] ou [B, C_t, 7, 7]
 
         # passa predicao pelo classificador do teacher para obter logits
-        with torch.no_grad():
-            if modo_target == 'post_gap':
-                logits = teacher.classifier(pred_student)
-            else:
-                pooled = teacher.gap(pred_student).flatten(1)
-                logits = teacher.classifier(pooled)
+        # IMPORTANTE: nao usar torch.no_grad() aqui — o gradiente da CE
+        # precisa fluir ate pred_student para guiar o espaco de features.
+        # Apenas desabilitamos grad nos parametros do classificador (nao sao otimizados).
+        for p in teacher.classifier.parameters():
+            p.requires_grad_(False)
+        if modo_target == 'post_gap':
+            logits = teacher.classifier(pred_student)
+        else:
+            pooled = teacher.gap(pred_student).flatten(1)
+            logits = teacher.classifier(pooled)
 
         perda, l_mse, l_ce = perda_fn(pred_student, feat_teacher, logits, labels)
         perda.backward()
@@ -375,10 +379,14 @@ class Trainer:
     # ── Q5: comparacao mse vs rkd ─────────────────────────────────────────────
 
     def _treinar_batch_rkd(self, student, teacher, dados, optimizer, perda_rkd_fn,
-                           alpha_ce=0.3):
+                           alpha_ce=1.0):
         """
         Passo de treino com RKD:
-        l_total = RKD(feat_student, feat_teacher) + alpha_ce * CE(logits, labels)
+        l_total = alpha_ce * CE(logits, labels) + RKD(feat_student, feat_teacher)
+
+        Seguindo Park et al. (CVPR 2019): CE e a perda principal (ancora o espaco
+        de features) e RKD e o regularizador relacional. alpha_ce=1.0 garante que
+        os gradientes de CE tenham peso total na otimizacao do student.
         """
         student.train(); teacher.eval()
         imgs, labels = dados
@@ -393,12 +401,17 @@ class Trainer:
         # rkd compara relacoes par-a-par no espaco de features
         l_rkd = perda_rkd_fn(pred_student, feat_teacher)
 
-        # ce supervisionado para nao perder alinhamento com rotulos
-        with torch.no_grad():
-            logits = teacher.classifier(pred_student)
+        # CE supervisionado: freezamos o classificador do teacher para que o
+        # backward nao acumule gradientes inuteis nos seus pesos (eles nao estao
+        # no optimizer e nunca sao atualizados). O gradiente da CE ainda flui
+        # corretamente ate pred_student atraves dos pesos congelados.
+        for p in teacher.classifier.parameters():
+            p.requires_grad_(False)
+        logits = teacher.classifier(pred_student)
         l_ce  = F.cross_entropy(logits, labels)
 
-        perda = l_rkd + alpha_ce * l_ce
+        # formula RKD paper: CE primaria + RKD regularizador
+        perda = alpha_ce * l_ce + l_rkd
         perda.backward()
         torch.nn.utils.clip_grad_norm_(student.parameters(), 1.0)
         optimizer.step()
@@ -428,7 +441,12 @@ class Trainer:
             optim_ = optim.AdamW(stu.parameters(), lr=lr, weight_decay=1e-4)
             sched_ = optim.lr_scheduler.CosineAnnealingLR(optim_, T_max=n_epochs)
 
-            perda_fn_mse = PerdaKD(alpha=0.7)
+            # garante que classifier do teacher esteja na GPU e sem grad
+            # (o freeze individual e feito em _treinar_batch_rkd, mas garantimos
+            # aqui para o modo MSE tambem, pois _treinar_batch_kd usa no_grad)
+            teacher.to(self.device)
+
+            perda_fn_mse = PerdaKD(alpha=0.5)  # melhor alpha das ablacoes (guia_t3)
             perda_fn_rkd = PerdaRKD()
             accs_vl = []
 
