@@ -1,16 +1,4 @@
-# Chama a estrutura de modulos:
-#   kd_utils.py        -> set_seed, Timer
-#   transforms.py      -> ImageTransforms
-#   datasets.py        -> DatasetManager
-#   models/
-#     blocks.py        -> conv_block, ResBlock
-#     encoders.py      -> PlainCNNEncoder, DepthwiseCNNEncoder, MiniResNetEncoder
-#     teacher.py       -> TeacherWrapper
-#     predictors.py    -> PreditorPostGAP, PreditorPreGAP, StudentModel
-#   losses.py          -> PerdaKD, PerdaRKD
-#   trainer.py         -> Trainer
-#   evaluator.py       -> Evaluator
-#   visualization.py   -> plotar_curvas, plotar_comparacao_mse_rkd, plotar_graficos_analise
+# Chama as estruturas de classes pra rodar as funções necessárias para as análises.
 
 from kd_utils import set_seed, Timer
 

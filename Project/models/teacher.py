@@ -1,16 +1,5 @@
 # models/teacher.py
-# TeacherWrapper - encapsula qualquer backbone pre-treinado - MO434
-#
-# Expoe uma interface uniforme para todos os teachers:
-#   get_pre_gap(x)   -> feature map espacial [B, C, 7, 7]
-#   get_post_gap(x)  -> vetor comprimido     [B, C]
-#   forward(x)       -> logits               [B, n_classes]
-#   freeze_encoder() -> congela pesos do encoder
-#
-# Teachers comparados no projeto:
-#   VGG-16:         138M params, 15.5 GFLOPs, feat_dim=512
-#   ResNet-50:       25M params,  4.1 GFLOPs, feat_dim=2048
-#   ConvNeXt-Small:  50M params,  8.7 GFLOPs, feat_dim=768
+# TeacherWrapper - encapsula qualquer backbone pre-treinado
 
 import torch.nn as nn
 from torchvision import models
@@ -36,7 +25,7 @@ class TeacherWrapper(nn.Module):
             |
         Vetor post-GAP: [B, C]
             |
-        [CLASSIFICADOR TREINAVEL]   <- so esta parte e treinada na Fase 1
+        [CLASSIFICADOR TREINAVEL]   <- só esta parte é treinada na Fase 1
             |
         Logits: [B, n_classes]
 
@@ -65,7 +54,7 @@ class TeacherWrapper(nn.Module):
 
         elif name == 'resnet50':
             base = models.resnet50(weights='IMAGENET1K_V2')
-            # remove gap e fc originais, mantemos so as conv layers
+            # remove gap e fc originais, mantemos só as conv layers
             self.encoder    = nn.Sequential(*list(base.children())[:-2])  # [B, 2048, 7, 7]
             self.gap        = nn.AdaptiveAvgPool2d(1)
             self.feat_dim   = 2048
@@ -85,29 +74,29 @@ class TeacherWrapper(nn.Module):
                 nn.Linear(768, n_classes)
             )
         else:
-            raise ValueError(f"backbone '{name}' nao suportado. use: vgg16, resnet50, convnext_small")
+            raise ValueError(f"Backbone '{name}' não suportado. Usar: vgg16, resnet50, convnext_small")
 
     def freeze_encoder(self):
         """
-        Congela todos os parametros do encoder.
-        Chamada obrigatoria antes da Fase 1: o encoder ja sabe extrair features
-        (pre-treinado no ImageNet), apenas o classificador precisa de ajuste.
+        Congela todos os parâmetros do encoder.
+        Chamada obrigatória antes da Fase 1: o encoder já sabe extrair features
+        (pré-treinado no ImageNet), apenas o classificador precisa de ajuste.
         """
         for p in self.encoder.parameters():
             p.requires_grad = False
-        print(f"encoder {self.backbone_name} congelado.")
+        print(f"Encoder {self.backbone_name} congelado.")
 
     def get_pre_gap(self, x):
-        """Retorna feature map espacial antes do GAP: [B, C, 7, 7]"""
+        # Retorna feature map espacial antes do GAP: [B, C, 7, 7]
         return self.encoder(x)
 
     def get_post_gap(self, x):
-        """Retorna vetor comprimido apos o GAP: [B, C]"""
+        # Retorna vetor comprimido após o GAP: [B, C]
         feat = self.encoder(x)
         return self.gap(feat).flatten(1)
 
     def forward(self, x):
-        """Forward completo: encoder -> gap -> classificador -> logits"""
+        # Forward completo: encoder -> gap -> classificador -> logits
         feat   = self.encoder(x)
         pooled = self.gap(feat).flatten(1)
         return self.classifier(pooled)

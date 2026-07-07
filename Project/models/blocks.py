@@ -1,22 +1,19 @@
 # models/blocks.py
-# Blocos primitivos de convolucao reutilizados pelos encoders - MO434
-#
-#   conv_block  - convolucao padrao ou depthwise-separavel com BN + ReLU
-#   ResBlock    - bloco residual: y = F(x) + x (skip connection)
+# Blocos primitivos de convolução reutilizados pelos encoders
 
 import torch.nn as nn
 
 
 def conv_block(c_in, c_out, stride=1, dw=False):
     """
-    Bloco de convolucao com batchnorm e relu.
+    Bloco de convolução com batchnorm e relu.
 
-    Se dw=True: usa convolucao depthwise-separavel (muito mais eficiente).
-    Convolucao depthwise-separavel: 1 filtro por canal + mistura de canais separada.
-    Reduz operacoes em ~8x comparado a conv padrao com mesma capacidade.
+    Se dw=True: usa convolução depthwise-separável (muito mais eficiente).
+    Convolução depthwise-separável: 1 filtro por canal + mistura de canais separada.
+    Reduz operações em ~8x comparado a convolução padrão com mesma capacidade.
     """
     if dw:
-        # depthwise separavel: conv por canal + pointwise para mistura de canais
+        # depthwise separável: convolução por canal + pointwise para mistura de canais
         return nn.Sequential(
             nn.Conv2d(c_in, c_in, 3, stride=stride, padding=1, groups=c_in, bias=False),
             nn.BatchNorm2d(c_in),
@@ -37,14 +34,14 @@ class SEBlock(nn.Module):
     """
     Squeeze-and-Excitation block (Hu et al., CVPR 2018).
 
-    Recalibra a resposta de cada canal aplicando atencao global:
+    Recalibra a resposta de cada canal aplicando atenção global:
       1. Squeeze: GAP -> vetor [B, C] (contexto global de cada canal)
-      2. Excitation: 2 camadas FC -> pesos de atencao por canal em (0,1)
+      2. Excitation: 2 camadas FC -> pesos de atenção por canal em (0,1)
       3. Scale: multiplica cada canal pelo seu peso
 
     Funciona como um filtro adaptativo sobre os mapas de features:
     canais mais discriminativos para a tarefa ganham maior peso.
-    Adiciona apenas 2*C*C/r parametros extras (r=reducao, padrao=16).
+    Adiciona apenas 2*C*C/r parâmetros extras (r=redução, padrão=16).
     """
     def __init__(self, channels: int, reduction: int = 16):
         super().__init__()
@@ -60,14 +57,15 @@ class SEBlock(nn.Module):
 
     def forward(self, x):
         w = self.se(x).view(-1, x.size(1), 1, 1)
-        return x * w   # repondera canais pelo mapa de atencao aprendido
+        # reponde canais pelo mapa de atenção aprendido
+        return x * w
 
 
 class ResBlock(nn.Module):
     """
     Bloco residual: y = F(x) + x (skip connection).
     Melhora o fluxo de gradiente em redes profundas,
-    permitindo treinar redes mais profundas sem degradacao.
+    permitindo treinar redes mais profundas sem degradação.
     """
     def __init__(self, c):
         super().__init__()
@@ -80,4 +78,5 @@ class ResBlock(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        return self.relu(self.conv(x) + x)  # adiciona a entrada original (residual)
+        # adiciona a entrada original (residual)
+        return self.relu(self.conv(x) + x)

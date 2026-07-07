@@ -1,20 +1,14 @@
 # models/predictors.py
-# Preditores do student + StudentModel completo - MO434 (Q2)
-#
-# Q2: O student deve prever features pre-GAP ou post-GAP do teacher?
-#
-#   PreditorPostGAP - alvo: vetor [B, C_teacher]       (simples, MLP)
-#   PreditorPreGAP  - alvo: mapa  [B, C_teacher, 7, 7] (preserva espacialidade)
-#   StudentModel    - encoder + preditor combinados
+# Preditores do student + StudentModel completo
 
 import torch.nn as nn
 
-# mapa de funcoes de ativacao suportadas pelo preditor MLP
-# ReLU: grad=1 para x>0, sem saturacao, padrao em ConvNets
-# GELU: x * Phi(x), suave e continua, padrao em Transformers (GPT, BERT)
+# Mapa de funções de ativação suportadas pelo preditor MLP
+# ReLU: grad=1 para x>0, sem saturação, padrão em ConvNets
+# GELU: x * Phi(x), suave e contínua, padrão em Transformers (GPT, BERT)
 # SiLU: x * sigmoid(x) = Swish, usada em EfficientNet/MobileNetV3
-#       gradiente mais rico que ReLU, util quando o espaco de features
-#       tem estrutura complexa de alta dimensao (ex: ResNet50 feat_dim=2048)
+#       gradiente mais rico que ReLU, útil quando o espaço de features
+#       tem estrutura complexa de alta dimensão (ex: ResNet50 feat_dim=2048)
 _ACTIVATIONS = {
     'relu': nn.ReLU,
     'gelu': nn.GELU,
@@ -29,12 +23,12 @@ class PreditorPostGAP(nn.Module):
     Tipo post-GAP:
       Alvo: vetor [B, C_t]
       Arquitetura: MLP com camada oculta
-      Vantagem: simples, dimensao baixa
+      Vantagem: mais simples, dimensão baixa
 
-    O parametro `activation` permite trocar ReLU por GELU ou SiLU:
-      - 'relu' (padrao): rapido, sem saturacao, padrao historico
+    O parametro "activation" permite trocar ReLU por GELU ou SiLU:
+      - 'relu' (padrão): rápido, sem saturação, padrão histórico
       - 'gelu': gradiente suave (usado em BERT/GPT), pode ajudar
-                em espacos de features de alta dimensao
+                em espaços de features de alta dimensão
       - 'silu': Swish — similar ao GELU, bom em redes de imagem
     """
     def __init__(self, dim_student: int, dim_teacher: int,
@@ -46,7 +40,8 @@ class PreditorPostGAP(nn.Module):
             nn.Flatten(),
             nn.Linear(dim_student, dim_hidden),
             act_cls(),
-            nn.Linear(dim_hidden, dim_teacher),  # projeta para espaco do teacher
+            # projeta para espaço do teacher
+            nn.Linear(dim_hidden, dim_teacher),
         )
 
     def forward(self, features_student):
@@ -57,12 +52,12 @@ class PreditorPostGAP(nn.Module):
 
 class PreditorPreGAP(nn.Module):
     """
-    Mapeia features do student para mapa espacial do teacher [B, C_teacher, 7, 7].
+    Mapeia as features do student para o mapa espacial do teacher [B, C_teacher, 7, 7].
 
     Tipo pre-GAP:
       Alvo: mapa [B, C_t, 7, 7]
       Arquitetura: Conv 1x1 para expandir canais + adaptive pool
-      Vantagem: preserva localizacao espacial
+      Vantagem: preserva localização espacial
     """
     def __init__(self, dim_student: int, dim_teacher: int):
         super().__init__()
@@ -71,7 +66,8 @@ class PreditorPreGAP(nn.Module):
             nn.BatchNorm2d(dim_teacher),
             nn.ReLU(),
         )
-        self.pool = nn.AdaptiveAvgPool2d(7)  # forca saida para 7x7 (igual ao teacher)
+        # força a saída para 7x7 (igual ao teacher)
+        self.pool = nn.AdaptiveAvgPool2d(7)
 
     def forward(self, features_student):
         # features_student: [B, C_s, H, W] -> predicao: [B, C_teacher, 7, 7]
@@ -85,7 +81,7 @@ class StudentModel(nn.Module):
 
     O student deve ser consideravelmente mais leve que o teacher:
       - Menos de 10% dos GFLOPs do teacher
-      - Menos de 20% dos parametros do teacher
+      - Menos de 20% dos parâmetros do teacher
     """
     def __init__(self, encoder: nn.Module, preditor: nn.Module):
         super().__init__()

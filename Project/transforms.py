@@ -1,13 +1,5 @@
 # transforms.py
-# Transformacoes de imagem para modelos pre-treinados no ImageNet - MO434
-#
-# Todos os backbones (VGG, ResNet, ConvNeXt) foram treinados com imagens
-# normalizadas com a media e desvio padrao do ImageNet. E obrigatorio usar
-# os mesmos valores:
-#   media  = [0.485, 0.456, 0.406]
-#   desvio = [0.229, 0.224, 0.225]
-#
-# Alem disso, os modelos esperam entradas de 224x224 pixels.
+# Transformacoes de imagem para modelos pre-treinados no ImageNet
 
 import torch
 from torchvision import transforms
@@ -15,27 +7,27 @@ from torchvision import transforms
 
 class ImageTransforms:
     """
-    Transformacoes, normalizacao e filtros de imagem para modelos pre-treinados.
+    Transformações, normalização e filtros de imagem para modelos pré-treinados.
 
     Todos os backbones (VGG, ResNet, ConvNeXt) foram treinados com imagens
-    normalizadas com a media e desvio padrao do ImageNet. E obrigatorio usar
+    normalizadas com a média e desvio padrão do ImageNet. É obrigatório usar
     os mesmos valores:
 
-        media  = [0.485, 0.456, 0.406]
+        média  = [0.485, 0.456, 0.406]
         desvio = [0.229, 0.224, 0.225]
 
-    Alem disso, os modelos esperam entradas de 224x224 pixels.
+    Além disso, os modelos esperam entradas de 224x224 pixels.
     """
 
-    # parametros de normalizacao do ImageNet (obrigatorio para modelos pre-treinados)
+    # parâmetros de normalização do ImageNet
     IMAGENET_MEAN = (0.485, 0.456, 0.406)
     IMAGENET_STD  = (0.229, 0.224, 0.225)
 
     @staticmethod
     def get_train_transform():
         """
-        Transformacoes com augmentacao para o conjunto de treino.
-        A augmentacao aumenta a diversidade sem coletar novos dados.
+        Transformações com augmentação para o conjunto de treino.
+        A augmentação aumenta a diversidade sem coletar novos dados.
         """
         return transforms.Compose([
             transforms.Resize(256),
@@ -48,9 +40,7 @@ class ImageTransforms:
 
     @staticmethod
     def get_val_transform():
-        """
-        Transformacoes padrao para validacao e teste (sem augmentacao).
-        """
+        # Transformações padrão para validação e teste (sem augmentação).
         return transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
@@ -61,8 +51,8 @@ class ImageTransforms:
     @staticmethod
     def denormalize(tensor):
         """
-        Inverte a normalizacao do ImageNet para visualizacao de imagens.
-        Necessario para exibir imagens sem o artefato da normalizacao.
+        Inverte a normalização do ImageNet para visualização de imagens.
+        Necessário para exibir imagens sem o artefato da normalização.
         Uso: img = ImageTransforms.denormalize(img_tensor)
         """
         mean_t = torch.tensor(ImageTransforms.IMAGENET_MEAN).view(3, 1, 1)

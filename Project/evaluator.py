@@ -7,7 +7,7 @@ import torch
 
 class Evaluator:
     """
-    Avaliacao final do student e calculo de metricas de eficiencia.
+    Avaliação final do student e calculo de metricas de eficiência.
     """
 
     def __init__(self, device):
@@ -19,11 +19,11 @@ class Evaluator:
         Usa classificador do teacher para avaliar student.
 
         O classificador nunca viu as features do student durante o treinamento.
-        Se o student aprendeu bem as representacoes, o classificador do teacher
-        deve conseguir classificar as predicoes do student com alta acuracia
-        (transferencia de conhecimento).
+        Se o student aprendeu corretamente com as representações, o classificador 
+        do teacher deve conseguir classificar as predicões do student com alta 
+        acurácia (transferência de conhecimento).
 
-        Retorna (top1_acc, top5_acc).
+        Retorna (top1_acc, top5_acc). 
         """
         student.eval(); teacher.eval()
         accs, top5_accs = [], []
@@ -41,7 +41,7 @@ class Evaluator:
             # top-1
             accs.append((logits.argmax(1) == labels).float().mean().item())
 
-            # top-5 (mais informativo para datasets com muitas classes)
+            # top-5 (mais informativo para os datasets que tem muitas classes)
             if logits.shape[1] >= 5:
                 top5 = logits.topk(5, dim=1).indices
                 top5_accs.append((top5 == labels.unsqueeze(1)).any(1).float().mean().item())
@@ -50,8 +50,8 @@ class Evaluator:
 
     def contar_eficiencia(self, model, input_size=(1, 3, 224, 224)):
         """
-        Retorna (gflops, n_parametros_M) de um modelo.
-        Requer: pip install fvcore
+        Retorna (gflops, n_parametros_M) do modelo.
+        Precisa instalar o fvcore: pip install fvcore
         """
         model.eval()
         dummy = torch.randn(*input_size)
@@ -67,9 +67,9 @@ class Evaluator:
     def relatorio_eficiencia(self, teacher, resultados_fase2,
                              filtro_alpha=0.7, filtro_target='post_gap'):
         """
-        Imprime tabela de eficiencia: GFLOPs e parametros do teacher vs students.
+        Imprime a tabela de eficiência: GFLOPs e parâmetros do teacher vs students.
         """
-        print("Eficiencia Computacional\n")
+        print("Eficiência Computacional\n")
         print(f"{'modelo':30s} {'gflops':>8s} {'params_M':>10s} {'reducao':>12s}")
         print("─" * 65)
 

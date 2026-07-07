@@ -1,15 +1,5 @@
 # trainer.py
-# Loops de treino das 3 fases do projeto KD - MO434
-#
-# Fases:
-#   Fase 1: Treinar o CLASSIFICADOR do teacher (encoder congelado)
-#   Fase 2: Treinar ENCODER + PREDITOR do student (imitacao de features)
-#   Fase 3: (avaliacao, ver evaluator.py)
-#
-# Inclui:
-#   - deteccao de overfitting (gap de acuracia, divergencia de val_loss)
-#   - early stopping com paciencia configuravel
-#   - rastreamento completo de metricas por epoca
+# Loops de treino das 3 fases do projeto KD
 
 import numpy as np
 from tqdm import tqdm
@@ -27,27 +17,27 @@ from models import PlainCNNEncoder, PreditorPostGAP, StudentModel
 
 class Trainer:
     """
-    Gerencia loops de treino para as tres fases do projeto KD.
+    Gerencia os loops de treino para as três fases do projeto KD.
 
     Fases:
       Fase 1: Treinar o CLASSIFICADOR do teacher (encoder congelado)
-      Fase 2: Treinar ENCODER + PREDITOR do student (imitacao de features)
-      Fase 3: (avaliacao, ver Evaluator)
+      Fase 2: Treinar ENCODER + PREDITOR do student (imitação de features)
+      Fase 3: (avaliação, ver Evaluator)
     """
 
     def __init__(self, device, seed: int = 42):
         """
-        Parametros:
+        Parâmetros:
           device: torch.device ('cuda' ou 'cpu')
-          seed:   semente de aleatoriedade para reproducibilidade (padrao=42).
-                  Use seed=None para desativar a fixacao de semente.
+          seed:   a semente de aleatoriedade para reproducibilidade (padrao=42).
+                  Usar seed=None para que a semente não seja fixada.
         """
         self.device = device
         self.seed   = seed
         if seed is not None:
             set_seed(seed)
 
-    # ── helpers internos ──────────────────────────────────────────────────────
+    # helpers internos
 
     def _treinar_batch(self, model, dados, optimizer):
         """
@@ -58,11 +48,16 @@ class Trainer:
         imgs, labels = dados
         imgs, labels = imgs.to(self.device), labels.to(self.device)
 
-        optimizer.zero_grad()                    # 1. zera gradientes acumulados
-        logits = model(imgs)                     # 2. forward pass
-        loss   = F.cross_entropy(logits, labels) # 3. cross-entropy loss
-        loss.backward()                          # 4. backpropagation
-        optimizer.step()                         # 5. atualiza pesos
+        # Zera gradientes acumulados
+        optimizer.zero_grad()
+        # Forward pass                 
+        logits = model(imgs)                     
+        # Cross-entropy loss
+        loss   = F.cross_entropy(logits, labels)
+        # Backpropagation
+        loss.backward()
+        # Atualiza os pesos
+        optimizer.step()
 
         acc = (logits.argmax(1) == labels).float().mean().item()
         return loss.item(), acc
@@ -70,8 +65,8 @@ class Trainer:
     @torch.no_grad()
     def _validar_batch(self, model, dados):
         """
-        Avalia o modelo sem computar gradientes (mais rapido e menos memoria).
-        model.eval() desativa dropout e usa estatisticas fixas do batchnorm.
+        Avalia o modelo sem computar os gradientes (é mais rapido e consome menos memória).
+        model.eval() desativa o dropout e usa estatisticas fixas do batchnorm.
         """
         model.eval()
         imgs, labels = dados
@@ -83,56 +78,56 @@ class Trainer:
 
     @torch.no_grad()
     def avaliar_loader(self, model, loader):
-        """Avalia o modelo em um DataLoader completo, retornando acuracia media."""
+        # Avalia o modelo em um DataLoader completo, retornando a acurácia média.
         accs = []
         for dados in loader:
             _, a = self._validar_batch(model, dados)
             accs.append(a)
         return np.mean(accs)
 
-    # ── fase 1: treinar classificador do teacher ──────────────────────────────
+    # Fase 1
 
     def treinar_fase1(self, model, loader_train, loader_val, optimizer, scheduler,
                       n_epochs, descricao="",
                       patience=5, overfitting_threshold=0.15):
         """
-        Loop de treino completo com early stopping e deteccao de overfitting.
+        Loop de treino completo com early stopping e detecção de overfitting.
 
         Na Fase 1:
-          1. O encoder esta congelado (nenhum gradiente passa por ele)
-          2. Apenas o classificador e atualizado com Cross-Entropy Loss
+          1. O encoder está congelado (nenhum gradiente passa por ele)
+          2. Apenas o classificador é atualizado com Cross-Entropy Loss
 
-        Por que isso e critico para o KD?
-        O classificador treinado aqui e reutilizado exatamente na Fase 3 para
-        avaliar o student. Isso forca o student a produzir features que estejam
-        no mesmo espaco do teacher.
+        Por que isso é extremamente necessário para o KD?
+        O classificador treinado aqui é reutilizado na Fase 3 para avaliar o student. 
+        Isso força o student a produzir features que estejam no mesmo espaço do teacher.
 
-        Deteccao de overfitting:
-          - gap_acc = acc_tr - acc_vl: mede distancia entre treino e validacao.
-            Quando gap_acc > overfitting_threshold por multiplas epocas, o modelo
-            memorizou o treino e nao generaliza.
-          - val_loss subindo enquanto train_loss cai: sinal classico de overfitting.
-          - early stopping: para quando val_acc nao melhora por `patience` epocas,
+        Detecção de overfitting:
+          - gap_acc = acc_tr - acc_vl: mede a distância entre treino e validação.
+            Quando gap_acc > overfitting_threshold por varias épocas, o modelo
+            memorizou o treino e não generaliza.
+          - val_loss subindo enquanto train_loss cai: sinal clássico de overfitting.
+          - early stopping: para quando val_acc não melhora por "patience",
             restaurando os melhores pesos automaticamente.
 
-        Parametros:
-          patience:               epocas sem melhora antes de parar (0 = desativado)
-          overfitting_threshold:  gap acc_tr - acc_vl que dispara aviso (padrao 0.15)
+        Parâmetros:
+          patience:               épocas sem melhora antes de parar (0 = desativado)
+          overfitting_threshold:  gap acc_tr - acc_vl que dispara aviso (padrão 0.15)
         """
         historico    = defaultdict(list)
         melhor_acc   = 0.0
         melhor_pesos = None
         melhor_epoch = 1
-        sem_melhora  = 0  # contador de epocas sem melhora (early stopping)
+        # contador de epocas sem melhora (early stopping)
+        sem_melhora  = 0 
 
         for epoch in range(1, n_epochs + 1):
-            # --- treino ---
+            # treino
             losses_tr, accs_tr = [], []
             for dados in tqdm(loader_train, desc=f"[{descricao}] epoca {epoch}/{n_epochs}", leave=False):
                 l, a = self._treinar_batch(model, dados, optimizer)
                 losses_tr.append(l); accs_tr.append(a)
 
-            # --- validacao ---
+            # validacao
             losses_vl, accs_vl = [], []
             for dados in loader_val:
                 l, a = self._validar_batch(model, dados)
@@ -140,20 +135,21 @@ class Trainer:
 
             loss_tr = np.mean(losses_tr);  acc_tr = np.mean(accs_tr)
             loss_vl = np.mean(losses_vl);  acc_vl = np.mean(accs_vl)
-            # gap de generalizacao: positivo indica que o modelo vai melhor no treino
-            # do que na validacao. Valores altos (> overfitting_threshold) sinalizam overfitting
+            # gap de generalização: positivo indica que o modelo vai melhor no treino do que na validação. 
+            # Valores altos (maiores que overfitting_threshold) sinalizam overfitting
             gap_acc = acc_tr - acc_vl
 
             historico['loss_tr'].append(loss_tr);  historico['acc_tr'].append(acc_tr)
             historico['loss_vl'].append(loss_vl);  historico['acc_vl'].append(acc_vl)
-            historico['gap_acc'].append(gap_acc)   # rastreia gap de generalizacao
+            # rastreia gaps de generalização
+            historico['gap_acc'].append(gap_acc)
 
             if scheduler:
                 scheduler.step()
 
-            # --- deteccao de overfitting ---
-            # sinal 1: gap de acuracia alto e persistente
-            # sinal 2: val_loss subindo enquanto train_loss cai (divergencia classica)
+            # detecção de overfitting
+            # sinal 1: gap de acurácia alto e persistente
+            # sinal 2: val_loss subindo enquanto train_loss cai (divergência clássica)
             avisos = []
             if gap_acc > overfitting_threshold:
                 avisos.append(f"gap={gap_acc:.3f}>{overfitting_threshold}")
@@ -162,7 +158,7 @@ class Trainer:
                     historico['loss_tr'][-1] < historico['loss_tr'][-2]):
                 avisos.append("val_loss subindo 3x seguidas")
 
-            # --- early stopping ---
+            # early stopping
             if acc_vl > melhor_acc:
                 melhor_acc   = acc_vl
                 melhor_pesos = deepcopy(model.state_dict())
@@ -179,38 +175,40 @@ class Trainer:
                 print(status)
 
             if patience and sem_melhora >= patience:
-                print(f"  early stopping na epoca {epoch} "
-                      f"(sem melhora por {patience} epocas). melhor: epoca {melhor_epoch}")
+                print(f" Early stopping na época {epoch} "
+                      f"(sem melhora por {patience} épocas). Melhor época: {melhor_epoch}")
                 break
 
         # restaura melhores pesos
         if melhor_pesos:
             model.load_state_dict(melhor_pesos)
-        historico['melhor_epoch'] = [melhor_epoch]  # lista para compatibilidade com defaultdict
-        print(f"  melhor acc validacao: {melhor_acc:.4f} (epoca {melhor_epoch})")
+        # lista para compatibilidade com defaultdict
+        historico['melhor_epoch'] = [melhor_epoch]
+        print(f" Melhor acc validação: {melhor_acc:.4f} (época {melhor_epoch})")
         return historico
 
-    # ── fase 2: destilacao ────────────────────────────────────────────────────
+    # fase 2: destilação
 
     def _treinar_batch_kd(self, student, teacher, dados, optimizer, perda_fn,
                           modo_target='post_gap'):
         """
-        Um passo de treino de destilacao:
-          1. Extrai features do teacher (sem gradiente)
-          2. Student prediz essas features
-          3. Calcula perda combinada MSE + CE
-          4. Backpropaga e atualiza apenas pesos do student
+        Cada passo de treino de destilação:
+          1. Extrai as features do teacher (sem gradiente)
+          2. O student prediz essas features
+          3. Calcula a perda combinada MSE + CE
+          4. Retropropaga e atualiza apenas os pesos do student
 
-        Ponto critico: NUNCA deixe gradientes fluirem pelo encoder do teacher.
-        torch.no_grad() e essencial para economizar memoria e tempo de computo.
+        Ponto crítico: NUNCA deixar os gradientes fluirem pelo encoder do teacher.
+        torch.no_grad() serve para economizar memória e tempo de computação.
         """
         student.train()
-        teacher.eval()  # teacher sempre em eval (batchnorm usa estatisticas fixas)
+        # teacher sempre em eval (batchnorm usa estatisticas fixas)
+        teacher.eval()
 
         imgs, labels = dados
         imgs, labels = imgs.to(self.device), labels.to(self.device)
 
-        # extrai targets do teacher sem gradiente (economiza memoria)
+        # extrai targets do teacher sem gradiente (economiza memória)
         with torch.no_grad():
             if modo_target == 'post_gap':
                 feat_teacher = teacher.get_post_gap(imgs)   # [B, C_t]
@@ -220,10 +218,10 @@ class Trainer:
         optimizer.zero_grad()
         pred_student = student(imgs)   # [B, C_t] ou [B, C_t, 7, 7]
 
-        # passa predicao pelo classificador do teacher para obter logits
-        # IMPORTANTE: nao usar torch.no_grad() aqui — o gradiente da CE
-        # precisa fluir ate pred_student para guiar o espaco de features.
-        # Apenas desabilitamos grad nos parametros do classificador (nao sao otimizados).
+        # passa a predição pelo classificador do teacher para obter logits
+        # IMPORTANTE: não usar torch.no_grad() aqui, pois o gradiente da CE
+        # precisa fluir até pred_student para guiar o espaço de features.
+        # Apenas desabilitamos grad nos parâmetros do classificador (que não são otimizados).
         for p in teacher.classifier.parameters():
             p.requires_grad_(False)
         if modo_target == 'post_gap':
@@ -234,7 +232,7 @@ class Trainer:
 
         perda, l_mse, l_ce = perda_fn(pred_student, feat_teacher, logits, labels)
         perda.backward()
-        # clipa gradientes para evitar explosao (importante para redes profundas)
+        # clipa gradientes para evitar explosão (importante para redes profundas)
         torch.nn.utils.clip_grad_norm_(student.parameters(), max_norm=1.0)
         optimizer.step()
 
@@ -243,7 +241,7 @@ class Trainer:
 
     @torch.no_grad()
     def validar_student(self, student, teacher, loader_val, modo_target='post_gap'):
-        """Avalia o student usando o classificador do teacher (preparacao para fase 3)."""
+        # avalia o student usando o classificador do teacher (preparação para fase 3).
         student.eval(); teacher.eval()
         accs = []
         for imgs, labels in loader_val:
@@ -261,8 +259,8 @@ class Trainer:
     def _validar_student_kd(self, student, teacher, loader_val, perda_fn,
                             modo_target='post_gap'):
         """
-        Avalia o student retornando (acc_vl, loss_vl) usando a perda de destilacao.
-        Necessario para detectar divergencia de val_loss na Fase 2 (sinal de overfitting).
+        Avalia o student retornando (acc_vl, loss_vl) usando a perda de destilação.
+        Necessário para detectar divergências de val_loss da Fase 2 (sinal de overfitting).
         """
         student.eval(); teacher.eval()
         accs, perdas = [], []
@@ -285,10 +283,10 @@ class Trainer:
                       n_epochs, lr, modo_target='post_gap', descricao='',
                       patience=5, overfitting_threshold=0.15):
         """
-        Loop completo de destilacao com registro de metricas e deteccao de overfitting.
+        Loop completo de destilação com registro de métricas e detecção de overfitting.
 
-        O teacher esta completamente congelado. O student aprende a imitar
-        as features do teacher atraves do gradiente da perda de destilacao.
+        O teacher está completamente congelado. O student aprende a imitar as features do
+        teacher através do gradiente da perda de destilação.
 
         Fluxo:
           Imagem -> [TEACHER ENCODER, congelado] -> features_teacher (alvo, sem grad)
@@ -298,14 +296,14 @@ class Trainer:
                                             MSE(pred_features, features_teacher)
                                             + CE(classifier(pred_features), labels)
 
-        Deteccao de overfitting:
-          - gap_acc = acc_tr - acc_vl: distancia entre treino e validacao.
-          - val_loss subindo enquanto train_loss cai: divergencia classica.
-          - early stopping por paciencia: para quando val_acc estagna.
+        Detecção de overfitting:
+          - gap_acc = acc_tr - acc_vl: distância entre treino e validação.
+          - val_loss subindo enquanto train_loss cai: divergência clássica.
+          - early stopping por paciência: para quando val_acc não muda.
 
-        Parametros:
-          patience:               epocas sem melhora antes de parar (0 = desativado)
-          overfitting_threshold:  gap acc_tr - acc_vl que dispara aviso (padrao 0.15)
+        Parâmetros:
+          patience:               épocas sem melhora antes de parar (0 = desativado)
+          overfitting_threshold:  gap acc_tr - acc_vl que dispara aviso de overfitting (padrão 0.15)
         """
         optimizer = optim.AdamW(student.parameters(), lr=lr, weight_decay=1e-4)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs)
@@ -323,14 +321,14 @@ class Trainer:
                     student, teacher, dados, optimizer, perda_fn, modo_target)
                 perdas.append(p); mselist.append(m); celist.append(c); accs_tr.append(a)
 
-            # avalia val com perda para monitorar divergencia de loss
+            # avalia val com perda para monitorar divergência de loss
             acc_vl, loss_vl = self._validar_student_kd(
                 student, teacher, loader_val, perda_fn, modo_target)
             scheduler.step()
 
             acc_tr  = np.mean(accs_tr)
             loss_tr = np.mean(perdas)
-            # gap de generalizacao: positivo indica melhor desempenho no treino do que na val
+            # gap de generalização: positivo indica melhor desempenho no treino do que na validação
             gap_acc = acc_tr - acc_vl
 
             historico['perda'].append(loss_tr)
@@ -338,9 +336,9 @@ class Trainer:
             historico['mse'].append(np.mean(mselist))
             historico['acc_tr'].append(acc_tr)
             historico['acc_vl'].append(acc_vl)
-            historico['gap_acc'].append(gap_acc)  # rastreia gap de generalizacao
+            historico['gap_acc'].append(gap_acc)  # rastreia gap de generalização
 
-            # --- deteccao de overfitting ---
+            # detecção de overfitting
             avisos = []
             if gap_acc > overfitting_threshold:
                 avisos.append(f"gap={gap_acc:.3f}>{overfitting_threshold}")
@@ -349,7 +347,7 @@ class Trainer:
                     historico['perda'][-1] < historico['perda'][-2]):
                 avisos.append("val_loss subindo 3x seguidas")
 
-            # --- early stopping ---
+            # early stopping
             if acc_vl > melhor_acc:
                 melhor_acc   = acc_vl
                 melhor_pesos = deepcopy(student.state_dict())
@@ -366,14 +364,14 @@ class Trainer:
                 print(status)
 
             if patience and sem_melhora >= patience:
-                print(f"  early stopping na epoca {epoch} "
-                      f"(sem melhora por {patience} epocas). melhor: epoca {melhor_epoch}")
+                print(f" Early stopping na época {epoch} "
+                      f"(sem melhora por {patience} épocas). Melhor época: {melhor_epoch}")
                 break
 
         if melhor_pesos:
             student.load_state_dict(melhor_pesos)
         historico['melhor_epoch'] = [melhor_epoch]
-        print(f"  melhor acc validacao: {melhor_acc:.4f} (epoca {melhor_epoch})")
+        print(f" Melhor acc validação: {melhor_acc:.4f} (época {melhor_epoch})")
         return historico, melhor_acc
 
     # ── Q5: comparacao mse vs rkd ─────────────────────────────────────────────
@@ -384,9 +382,9 @@ class Trainer:
         Passo de treino com RKD:
         l_total = alpha_ce * CE(logits, labels) + RKD(feat_student, feat_teacher)
 
-        Seguindo Park et al. (CVPR 2019): CE e a perda principal (ancora o espaco
+        Seguindo Park et al. (CVPR 2019): CE e a perda principal (ancora o espaço
         de features) e RKD e o regularizador relacional. alpha_ce=1.0 garante que
-        os gradientes de CE tenham peso total na otimizacao do student.
+        os gradientes de CE tenham peso total na otimização do student.
         """
         student.train(); teacher.eval()
         imgs, labels = dados
@@ -398,19 +396,19 @@ class Trainer:
         optimizer.zero_grad()
         pred_student = student(imgs)
 
-        # rkd compara relacoes par-a-par no espaco de features
+        # rkd compara relações par-a-par no espaço de features
         l_rkd = perda_rkd_fn(pred_student, feat_teacher)
 
-        # CE supervisionado: freezamos o classificador do teacher para que o
-        # backward nao acumule gradientes inuteis nos seus pesos (eles nao estao
-        # no optimizer e nunca sao atualizados). O gradiente da CE ainda flui
-        # corretamente ate pred_student atraves dos pesos congelados.
+        # CE supervisionado: Congelamos o classificador do teacher para que o
+        # backward não acumule gradientes inúteis nos seus pesos (eles não estão
+        # no optimizer e nunca são atualizados). O gradiente da CE ainda flui
+        # corretamente até pred_student através dos pesos congelados.
         for p in teacher.classifier.parameters():
             p.requires_grad_(False)
         logits = teacher.classifier(pred_student)
         l_ce  = F.cross_entropy(logits, labels)
 
-        # formula RKD paper: CE primaria + RKD regularizador
+        # formula RKD paper: CE primária + RKD regularizador
         perda = alpha_ce * l_ce + l_rkd
         perda.backward()
         torch.nn.utils.clip_grad_norm_(student.parameters(), 1.0)
@@ -422,13 +420,13 @@ class Trainer:
     def comparar_mse_vs_rkd(self, teacher, datasets, teacher_nome, dataset_nome,
                              n_epochs=20, lr=1e-3, student_channels=(32, 64, 128, 256)):
         """
-        Compara MSE baseline vs RKD com mesmo encoder e teacher (Q5).
+        Compara MSE baseline vs RKD com o mesmo encoder e teacher (Q5).
 
-        MSE forca o student a copiar os valores absolutos das features.
-        RKD alinha as relacoes entre amostras, invariante a escala.
-        Util quando o student tem capacidade menor (capacity mismatch).
+        MSE força o student a copiar os valores absolutos das features.
+        RKD alinha as relações entre amostras, independente da escala.
+        Útil quando o student tem capacidade menor (capacity mismatch).
 
-        Retorna dict com accs_vl e melhor_acc para cada metodo.
+        Retorna dict com accs_vl e melhor_acc para cada método.
         """
         resultados_comp = {}
 
@@ -442,11 +440,11 @@ class Trainer:
             sched_ = optim.lr_scheduler.CosineAnnealingLR(optim_, T_max=n_epochs)
 
             # garante que classifier do teacher esteja na GPU e sem grad
-            # (o freeze individual e feito em _treinar_batch_rkd, mas garantimos
-            # aqui para o modo MSE tambem, pois _treinar_batch_kd usa no_grad)
+            # (o congelamento individual é feito em _treinar_batch_rkd, mas garantimos
+            # aqui para o modo MSE também, pois _treinar_batch_kd usa no_grad)
             teacher.to(self.device)
 
-            perda_fn_mse = PerdaKD(alpha=0.5)  # melhor alpha das ablacoes (guia_t3)
+            perda_fn_mse = PerdaKD(alpha=0.5)
             perda_fn_rkd = PerdaRKD()
             accs_vl = []
 

@@ -1,5 +1,5 @@
 # datasets.py
-# Carregamento e gestao dos datasets do projeto - MO434
+# Faz o carregamento e gerencia os datasets do projeto
 
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, random_split
@@ -10,15 +10,13 @@ from transforms import ImageTransforms
 
 class DatasetManager:
     """
-    Carregamento e gestao dos datasets do projeto.
-
-    Datasets disponibilizados:
-    - flowers102: 102 classes de flores, ~8.000 imagens em resolucao variada
+    Datasets:
+    - flowers102: 102 classes de flores, ~8.000 imagens com resoluções variadas
       splits oficiais: train (1020), val (1020), test (6149)
       ideal para Q1: fine-grained, ConvNeXt tende a se sair melhor
 
-    - pets: Oxford-IIIT-Pet, 37 racas de caes e gatos, ~7.000 imagens
-      testa transferencia em classificacao de granularidade fina com menos dados
+    - pets: Oxford-IIIT-Pet, 37 raças de cães e gatos, ~7.000 imagens
+      testa a transferência na classificação de granularidade fina com menos dados
     """
 
     def __init__(self, data_root='./data', batch_size=32, num_workers=2):
@@ -27,15 +25,14 @@ class DatasetManager:
         self.num_workers = num_workers
         self.datasets    = {}
 
-        # transformacoes reutilizadas por todos os datasets
+        # transformações reutilizadas por todos os datasets
         self.transform_train = ImageTransforms.get_train_transform()
         self.transform_val   = ImageTransforms.get_val_transform()
 
     def load_flowers102(self):
         """
-        Carrega Flowers-102 com splits oficiais: train (1020), val (1020), test (6149).
-        102 classes de flores em resolucao variada.
-        Ideal para Q1: fine-grained, a diferenca entre teachers fica mais evidente.
+        Carrega Flowers-102 com splits oficiais
+        Ideal para Q1: fine-grained, a diferença entre teachers fica mais evidente.
         """
         train_raw = datasets.Flowers102(
             root=self.data_root, split='train', download=True,
@@ -61,9 +58,9 @@ class DatasetManager:
 
     def load_oxford_pets(self):
         """
-        Carrega Oxford-IIIT-Pet com 37 classes (racas de caes e gatos), ~7.000 imagens.
-        Divisao: 80% treino, 20% validacao do conjunto trainval.
-        Confirma que os resultados generalizam para um dominio diferente do Flowers-102.
+        Carrega Oxford-IIIT-Pet com 37 classes.
+        Divisão: 80% treino, 20% validação do conjunto trainval.
+        Confirma que os resultados generalizam para um domínio diferente do Flowers-102.
         """
         trainval = datasets.OxfordIIITPet(
             root=self.data_root, split='trainval', download=True,
@@ -72,7 +69,7 @@ class DatasetManager:
             root=self.data_root, split='test', download=True,
             transform=self.transform_val)
 
-        # divisao: 80% treino, 20% validacao do conjunto trainval
+        # divisão do conjunto trainval
         n_train = int(0.8 * len(trainval))
         n_val   = len(trainval) - n_train
         tr, vl  = random_split(trainval, [n_train, n_val])
@@ -90,21 +87,21 @@ class DatasetManager:
         return self.datasets['pets']
 
     def load_all(self):
-        """Carrega todos os datasets e retorna o mapa de configuracoes."""
+        # Carrega todos os datasets e retorna o mapa de configurações.
         self.load_flowers102()
         self.load_oxford_pets()
         return self.datasets
 
     def get(self, name):
-        """Retorna configuracao de um dataset pelo nome ('flowers102' ou 'pets')."""
+        # Retorna configuração de um dataset pelo nome ('flowers102' ou 'pets').
         if name not in self.datasets:
-            raise KeyError(f"dataset '{name}' nao carregado. chame load_{name}() primeiro.")
+            raise KeyError(f"dataset '{name}' não carregado. chame load_{name}() primeiro.")
         return self.datasets[name]
 
     def visualizar_amostras(self, n_imgs=8):
         """
-        Visualizacao: amostras de imagens dos datasets carregados.
-        Inverte a normalizacao do ImageNet para exibir as imagens corretamente.
+        Visualização: Amostras de imagens dos datasets carregados.
+        Inverte a normalização do ImageNet para que as imagens sejam exibidas corretamente.
         """
         nomes = list(self.datasets.keys())
         fig, axes = plt.subplots(len(nomes), n_imgs, figsize=(n_imgs * 2, len(nomes) * 2.5))
@@ -121,7 +118,7 @@ class DatasetManager:
                 axes[row][i].axis('off')
             axes[row][0].set_ylabel(nome, fontsize=10, rotation=90)
 
-        plt.suptitle("Amostras dos datasets (normalizacao invertida para visualizacao)",
+        plt.suptitle("Amostras dos datasets (normalização invertida para visualização)",
                      fontsize=12, fontweight='bold')
         plt.tight_layout()
         plt.show()

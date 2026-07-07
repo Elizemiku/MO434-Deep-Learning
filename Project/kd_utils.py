@@ -1,8 +1,8 @@
 # kd_utils.py
 # Classes auxiliares do projeto MO434 - Knowledge Distillation
 #
-#   set_seed  - fixa semente de aleatoriedade para reproducibilidade
-#   Timer     - mede e registra o tempo de execucao de blocos de codigo
+#   set_seed  - fixa uma semente de aleatoriedade para que tenha reproducibilidade
+#   Timer     - mede e registra o tempo de execucao dos blocos de codigo
 
 import random
 import time
@@ -13,13 +13,13 @@ import torch
 
 def set_seed(seed: int = 42):
     """
-    Fixa a semente de aleatoriedade em todos os modulos relevantes para garantir
-    reproducibilidade: mesmos pesos iniciais, mesma ordem de batches e mesmos
-    resultados entre execucoes diferentes.
+    Fixa uma semente de aleatoriedade em todos os modulos relevantes para garantir
+    a reproducibilidade: mesmos pesos iniciais, mesma ordem de batches e mesmos
+    resultados entre execuções diferentes.
 
     Modulos fixados:
       - random   (Python stdlib)
-      - numpy    (operacoes de array)
+      - numpy    (operações de array)
       - torch    (CPU e CUDA)
 
     Parametros:
@@ -29,22 +29,20 @@ def set_seed(seed: int = 42):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    # desativa otimizacoes nao-deterministicas da cuDNN que podem introduzir variacao
+    # desativa otimizacoes não-deterministicas do cuDNN que podem criar variações entre execuções
     # custo: leve reducao de velocidade na GPU
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark     = False
     print(f"semente fixada: {seed} (random, numpy, torch, cuda)")
 
 
-# =============================================================================
-# TIMER - MEDICAO DE TEMPO DE EXECUCAO
-# =============================================================================
+# Timer para medir o tempo de execução
 
 class Timer:
     """
-    Mede o tempo de execucao de qualquer bloco de codigo no notebook.
+    Mede o tempo de execução de qualquer bloco de código no notebook.
 
-    Uso como context manager (recomendado para celulas do notebook):
+    Uso como context manager:
 
         with Timer("carregamento dos datasets"):
             dataset_manager.load_all()
@@ -57,22 +55,22 @@ class Timer:
         @Timer("minha funcao")
         def minha_funcao(): ...
 
-    O tempo e impresso automaticamente ao fim do bloco no formato:
+    O tempo é impresso automaticamente no fim do bloco neste formato:
         [timer] carregamento dos datasets  ->  3.42 s
         [timer] fase 1 - resnet50          ->  2 min 14.8 s
 
-    O historico de todas as medicoes fica em Timer.historico (dict global),
-    permitindo comparar tempos ao final dos experimentos.
+    O histórico de todas as medições fica em Timer.historico (dict global),
+    permitindo comparar os tempos no final dos experimentos.
     """
 
-    # historico global: acumula todos os tempos medidos na sessao
+    # histórico global: acumula todos os tempos medidos na sessão
     historico: dict = {}
 
     def __init__(self, descricao: str = ""):
         self.descricao = descricao
         self._inicio   = None
 
-    # ── context manager ───────────────────────────────────────────────────────
+    # context manager
 
     def __enter__(self):
         self._inicio = time.perf_counter()
@@ -81,23 +79,23 @@ class Timer:
     def __exit__(self, *args):
         elapsed = time.perf_counter() - self._inicio
         self._registrar(self.descricao, elapsed)
-        return False  # nao suprime excecoes
+        return False  # Para manter as exceções
 
-    # ── decorador ─────────────────────────────────────────────────────────────
+    # decorador
 
     def __call__(self, func):
-        """Permite usar Timer como @Timer('nome') sobre uma funcao."""
+        # wrapper que permite usar o Timer como @Timer('nome').
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             with Timer(self.descricao or func.__name__):
                 return func(*args, **kwargs)
         return wrapper
 
-    # ── metodos utilitarios ───────────────────────────────────────────────────
+    # métodos utilitários
 
     @staticmethod
     def _registrar(descricao: str, elapsed: float):
-        """Formata e imprime o tempo; salva no historico global."""
+        # Formata e imprime o tempo
         if elapsed < 60:
             tempo_str = f"{elapsed:.2f} s"
         else:
@@ -108,20 +106,21 @@ class Timer:
         label = descricao if descricao else "bloco"
         print(f"[timer] {label:<45s} -> {tempo_str}")
 
-        # acumula no historico global (sobrescreve se rodado mais de uma vez)
+        # Salva no histórico global (sobrescreve se rodar mais de uma vez)
         Timer.historico[label] = elapsed
 
     @staticmethod
     def resumo():
         """
-        Imprime tabela com todos os tempos medidos na sessao.
-        Util para comparar quanto tempo cada fase/experimento consumiu.
+        Imprime a tabela com todos os tempos medidos na sessão.
+        Útil para comparar quanto tempo cada fase/experimento 
+        demorou para executar.
         """
         if not Timer.historico:
-            print("nenhuma medicao registrada ainda.")
+            print("Sem nenhuma medição no momento.")
             return
         print("\n" + "=" * 58)
-        print(" Resumo de Tempos da Sessao")
+        print(" Resumo de tempos dessa sessão")
         print("=" * 58)
         total = 0.0
         for label, elapsed in Timer.historico.items():
