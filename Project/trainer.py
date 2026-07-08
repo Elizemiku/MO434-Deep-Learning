@@ -106,8 +106,8 @@ class Trainer:
             Quando gap_acc > overfitting_threshold por varias épocas, o modelo
             memorizou o treino e não generaliza.
           - val_loss subindo enquanto train_loss cai: sinal clássico de overfitting.
-          - early stopping: para quando val_acc não melhora por "patience",
-            restaurando os melhores pesos automaticamente.
+          - monitora val_acc a cada epoca, se nao houver melhora do parametro patience por epocas consecutivas, interrompe o treino e restaura
+            automaticamente os pesos do melhor momento (menor risco de overfitting).
 
         Parâmetros:
           patience:               épocas sem melhora antes de parar (0 = desativado)

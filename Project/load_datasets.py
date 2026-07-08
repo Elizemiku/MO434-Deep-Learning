@@ -87,13 +87,13 @@ class DatasetManager:
         return self.datasets['pets']
 
     def load_all(self):
-        # Carrega todos os datasets e retorna o mapa de configurações.
+        # carrega todos os datasets e retorna o mapa de configurações.
         self.load_flowers102()
         self.load_oxford_pets()
         return self.datasets
 
     def get(self, name):
-        # Retorna configuração de um dataset pelo nome ('flowers102' ou 'pets').
+        # retorna configuração de um dataset pelo nome ('flowers102' ou 'pets').
         if name not in self.datasets:
             raise KeyError(f"dataset '{name}' não carregado. chame load_{name}() primeiro.")
         return self.datasets[name]

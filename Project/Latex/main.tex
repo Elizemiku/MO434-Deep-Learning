@@ -72,7 +72,6 @@
 
 %% Referências e Hiperlinks
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
-\usepackage{url}
 % REMOVIDO: \usepackage{natbib} para evitar conflito com o biblatex do .sty
 
 \hypersetup{
@@ -96,53 +95,43 @@
    \vspace{2mm}
    \textbf{Disciplina: Deep Learning (MO434/MC934)} \\
    \textbf{Prof. Alexandre Xavier Falcão}
-   \\[3cm]
+   \\[1cm]
 }
-\vspace{1.5mm}
+
 \titulo{Estudo Comparativo de Esquemas de Destilação de Conhecimento
 de Classificadores de Imagem Pré-treinados para uma ConvNet Leve}
-
-\autor{
-  Aluno A \quad Número: 7 \\
-}
-\vspace{1.5mm}
+\autor{Aluno: Elizabeth Borgognoni Souto \quad RA: 170409}
 \data{}
 
-\pretextual
+% Reduz o espaco entre o TITULO e o NOME DO AUTOR na capa.
+% Copia FIEL do \posttitle original do utfprpgtex-article.sty, mudando
+% apenas o \vskip final (que era \vskip\baselineskip). \makeatletter e
+% necessario porque a definicao usa o comando interno \arg@ifnotempty.
+% Para aproximar/afastar o autor, ajuste o valor: 0pt (sem gap),
+% -0.3cm (mais junto), 0.3cm (um pouco de espaco).
+\makeatletter
+\renewcommand{\posttitle}{%
+  \arg@ifnotempty{\titleinanotherlanguage}{%
+    \vskip\baselineskip%
+    \itshape\titleinanotherlanguage%
+  }%
+  \end{center}%
+  \vskip 0pt%
+}
+\makeatother
 
 \begin{paginadetitulo}
 
-\vspace{5mm}
 \begin{ambienteresumo}
-Este trabalho implementa e avalia experimentalmente diferentes esquemas de
-\textit{Knowledge Distillation} (KD) para transferir o conhecimento de redes
-convolucionais profundas pré-treinadas (teachers: VGG16, ResNet50 e
-ConvNeXt-Small) para um encoder leve treinado do zero (student), utilizando
-os conjuntos de dados Flowers-102 e Oxford-IIIT-Pet. O pipeline adotado
-organiza-se em três fases: (i) treino do classificador do teacher com encoder
-congelado; (ii) destilação via imitação de representações intermediárias
-post-GAP; (iii) avaliação do student utilizando o classificador original do
-teacher. São investigadas cinco questões centrais: a qualidade de transferência
-por teacher, a escolha da camada de representação alvo (pre-GAP vs.\
-post-GAP), a arquitetura ótima do encoder do student, a função de perda de
-destilação mais adequada e a comparação entre alinhamento absoluto de features
-(MSE) e alinhamento relacional (RKD). Os melhores resultados com ativação ReLU foram 30,7\% de acurácia top-1 no
-Flowers-102 (ResNet-50, encoder Depthwise, 1,23M parâmetros vs.\ 23,7M) e 37,7\%
-no Oxford-IIIT-Pet (VGG-16, PlainCNN, 0,78M). A substituição da ativação ReLU
-por \textbf{SiLU} no preditor MLP elevou estes valores para \textbf{44,1\%}
-no Flowers-102 e \textbf{33,9\%} no Oxford-IIIT-Pet (+13,4 e +9,9~p.p.,
-respectivamente), com top-5 de 71,6\% e 70,7\%. A destilação relacional
-(RKD+CE) mostrou-se significativamente superior ao alinhamento absoluto (MSE)
-em contexto de grande assimetria de capacidade.
+Este trabalho avalia experimentalmente diferentes esquemas de Knowledge Distillation (KD) para transferir conhecimento de modelos profundos (VGG16, ResNet50, ConvNeXt-Small) para um encoder leve treinado do zero nos conjuntos Flowers-102 e Oxford-IIIT-Pet. O pipeline divide-se em: treino do classificador do teacher, destilação via imitação de representações intermediárias post-GAP e avaliação do student. Investigou-se o impacto da arquitetura do student, camadas alvo, funções de perda e o alinhamento absoluto (MSE) versus relacional (RKD). Os melhores resultados com ativação ReLU atingiram 30,7\% (Flowers-102) e 37,7\% (Oxford-IIIT-Pet) de acurácia top-1. A substituição por ativação SiLU no preditor MLP elevou o desempenho para 44,1\% (+13,4 p.p.) e 33,9\% (+9,9 p.p.), respectivamente. Por fim, com o baseline corrigido, a destilação relacional (RKD+CE, 38,9\%) e o alinhamento absoluto (MSE+CE, 39,7\%) mostraram-se equivalentes, sem vantagem empírica do RKD nas condições testadas.
 
-\palavraschave{Destilação de conhecimento, redes convolucionais leves,
-              transferência de representações, RKD, compressão de modelos.}
+\palavraschave{Destilação de conhecimento, redes convolucionais leves,transferência de representações, RKD, compressão de modelos.}
 \end{ambienteresumo}
 
 \vfill
 \begin{center}
     Campinas \\
-    06 de Julho de 2026
+    07 de Julho de 2026
 \end{center}
 
 \end{paginadetitulo}
@@ -176,12 +165,11 @@ produza valores numericamente próximos aos do teacher, o que pode ser difícil
 quando há grande diferença de capacidade (\textit{capacity mismatch}).
 \textcite{park2019rkd} propuseram a \textit{Relational Knowledge Distillation}
 (RKD), que alinha as \textit{relações} entre amostras no espaço de features
-em vez dos valores absolutos. A RKD utiliza dois critérios: (i)~\textbf{distância},
-que preserva as distâncias par-a-par normalizadas; e (ii)~\textbf{ângulo}, que
+em vez dos valores absolutos. A RKD utiliza dois critérios: (1)~\textbf{distância},
+que preserva as distâncias par-a-par normalizadas, e (2)~\textbf{ângulo}, que
 preserva a geometria angular entre trios de amostras. Uma propriedade chave
 da RKD é a \textbf{invariância de escala}: o student pode aprender uma representação
 em escala diferente da do teacher, desde que a estrutura relacional seja mantida.
-A \textcite{gou2021kd_survey} oferece uma revisão abrangente das variantes de KD.
 
 \subsection{Arquiteturas Teacher}
 
@@ -219,20 +207,20 @@ com domínios e granularidades distintos:
 
 \subsection{Pipeline de Três Fases}
 
-O sistema implementado segue um pipeline de três fases independentes,
+O código implementado segue um pipeline de três fases independentes,
 ilustrado na Figura~\ref{fig:pipeline}:
 
 \begin{description}
-  \item[Fase 1 — Classificador do Teacher:]
+  \item[Fase 1 - Classificador do Teacher:]
     O encoder do teacher é congelado e apenas o classificador linear é treinado
     para cada combinação teacher/dataset. O classificador treinado é persistido
     e reutilizado exatamente na Fase~3, garantindo consistência na avaliação.
-  \item[Fase 2 — Destilação (Fase KD):]
+  \item[Fase 2 - Destilação (Fase KD):]
     O student é treinado para imitar as representações do teacher. A função de
     perda combina alinhamento de features (MSE ou RKD) com cross-entropy
     supervisionada (CE), usando o classificador do teacher para derivar logits
     a partir das predições do student.
-  \item[Fase 3 — Avaliação:]
+  \item[Fase 3 - Avaliação:]
     O encoder do student, treinado na Fase~2, é avaliado aplicando diretamente
     o classificador do teacher (fixo da Fase~1) sobre as suas predições de
     features, sem nenhum treino adicional.
@@ -270,8 +258,8 @@ ilustrado na Figura~\ref{fig:pipeline}:
 \node[boxr, right=0.8cm of senc2]  (pred2)  {Preditor\\MLP};
 \node[boxg, right=0.8cm of pred2]  (loss2)  {$\mathcal{L}_{KD}$};
 \draw[arr] (img2)  -- (tenc2);
-\draw[arr] (img2)  |- ([yshift=-0.35cm]senc2.west) -- (senc2);
-\draw[arr] (tenc2) -| node[midway,above,lbl]{features\\alvo} (loss2);
+\draw[arr] (img2.south) -- ++(0,-0.4cm) -| (senc2.south);
+\draw[arr] (tenc2.north) -- ++(0,0.5cm) -- ($(loss2.north)+(0,0.5cm)$) node[near end,below,lbl]{features alvo} -- (loss2.north);
 \draw[arr] (senc2) -- (pred2);
 \draw[arr] (pred2) -- (loss2);
 \node[lbl, above=0.1cm of tenc2] {congelado};
@@ -294,30 +282,30 @@ ilustrado na Figura~\ref{fig:pipeline}:
 \end{tikzpicture}
 \caption{Pipeline de três fases do sistema de destilação de conhecimento.
   \textbf{Azul}: módulos pré-treinados e congelados. \textbf{Laranja}: módulos
-  treináveis. \textbf{Verde}: função objetivo / métrica.}
+  treináveis. \textbf{Verde}: função objetivo/métrica}
 \label{fig:pipeline}
 \end{figure}
+\vfill
 
 \subsection{Arquitetura do Student}
 
-O student é composto por dois módulos: (i)~um \textbf{encoder} convolucional leve
-e (ii)~um \textbf{preditor MLP} (\texttt{PreditorPostGAP}) que projeta a
-representação do student para o espaço de features post-GAP do teacher.
+O student é composto por dois módulos: Um \textbf{encoder} convolucional leve
+e um \textbf{preditor MLP} (\texttt{PreditorPostGAP}) que projeta a
+representação do student para o espaço de features post-GAP do teacher. O preditor MLP aplica Global Average Pooling sobre o mapa de features do encoder, usando a seguinte fórmula : 
 
-O preditor MLP aplica Global Average Pooling sobre o mapa de features do encoder,
-seguido de:
 \begin{equation}
   \hat{f} = W_2\,\bigl(\mathrm{ReLU}(W_1\,z + b_1)\bigr) + b_2
   \label{eq:mlp}
 \end{equation}
+
 onde $z \in \mathbb{R}^{d_s}$ é a representação post-GAP do student, a camada
 oculta tem 512 unidades e a saída linear em $\mathbb{R}^{d_t}$ não possui
-ativação, o que é essencial para a regressão de features de escala arbitrária.
-A função de ativação ReLU foi escolhida por evitar o problema do gradiente
+ativação, para obter a regressão de features de escala arbitrária.
+A função de ativação ReLU foi a primeira opção escolhida por evitar o problema do gradiente
 evanescente: $\mathrm{ReLU}(x) = \max(0, x)$, com derivada constante 1 para
 $x > 0$.
 
-Três variantes de encoder são investigadas (Seção~\ref{sec:q3}), todas com
+Três variantes de encoder são investigadas (Seção~\ref{sec:q3}), todas elas com
 canais $(32, 64, 128, 256)$ e $4$ downsampling via stride$=2$:
 
 \begin{description}
@@ -328,10 +316,11 @@ canais $(32, 64, 128, 256)$ e $4$ downsampling via stride$=2$:
     após cada bloco, $\approx$2,3--3,1M parâmetros.
 \end{description}
 
-\subsection{Funções de Perda}
+\subsection{Escolha das Funções de Perda}
 
-\paragraph{PerdaKD (MSE+CE).}
+\subsubsection{PerdaKD (MSE+CE)}
 Combinação convexa de MSE sobre features e cross-entropy supervisionada:
+\\
 \begin{equation}
   \mathcal{L}_{KD} = \alpha \cdot \mathrm{MSE}(\hat{f}, f_T)
                    + (1-\alpha) \cdot \mathcal{L}_{CE}(g(\hat{f}), y)
@@ -341,8 +330,9 @@ onde $f_T$ são as features post-GAP do teacher, $g(\cdot)$ é o classificador
 do teacher (fixo), $y$ é o rótulo verdadeiro e $\alpha \in \{0, 0{,}5, 0{,}7, 1{,}0\}$
 foi investigado via ablação (Seção~\ref{sec:q4}).
 
-\paragraph{PerdaRKD.}
+\subsubsection{PerdaRKD}
 Implementação de \textcite{park2019rkd} com dois termos:
+\\
 \begin{align}
   \mathcal{L}_{dist} &= \frac{1}{|\mathcal{P}_2|}
     \sum_{(i,j) \in \mathcal{P}_2}
@@ -362,8 +352,8 @@ combinada com cross-entropy: $\mathcal{L} = \mathcal{L}_{CE} + \mathcal{L}_{RKD}
 \subsection{Estrutura do Repositório}
 \label{sec:repo}
 
-O repositório está organizado conforme o Quadro~\ref{tab:repo} e a
-Figura~\ref{fig:modulos}.
+O repositório está organizado conforme a Tabela 1 e a
+Figura 2.
 
 \begin{table}[htb]
 \centering
@@ -372,7 +362,7 @@ Figura~\ref{fig:modulos}.
 \begin{tabularx}{\linewidth}{@{}lX@{}}
 \toprule
 \textbf{Arquivo / Pasta} & \textbf{Descrição} \\ \midrule
-\texttt{models/blocks.py}      & Primitivos: \texttt{conv\_block} e \texttt{ResBlock} \\
+\texttt{models/blocks.py}      & Convoluções \texttt{conv\_block} e \texttt{ResBlock} \\
 \texttt{models/encoders.py}    & Encoders leves: \texttt{PlainCNNEncoder}, \texttt{DepthwiseCNNEncoder}, \texttt{MiniResNetEncoder} \\
 \texttt{models/predictors.py}  & Preditores: \texttt{PreditorPostGAP}, \texttt{PreditorPreGAP}, \texttt{StudentModel} \\
 \texttt{models/teacher.py}     & \texttt{TeacherWrapper}: encapsula VGG16, ResNet50, ConvNeXt-Small com \texttt{get\_post\_gap()} e \texttt{freeze\_encoder()} \\
@@ -382,102 +372,114 @@ Figura~\ref{fig:modulos}.
 \texttt{load\_datasets.py}     & \texttt{DatasetManager}: carrega Flowers-102 e Oxford-IIIT-Pet \\
 \texttt{transforms.py}         & Transformações ImageNet (treino e inferência) \\
 \texttt{visualization.py}      & Funções de plotagem (\texttt{plotar\_curvas}, \texttt{plotar\_comparacao\_mse\_rkd}) \\
-\texttt{kd\_run.py}            & Módulo de re-exportação: ponto de entrada único para os notebooks \\
+\texttt{kd\_run.py}            & Módulo de re-exportação: imports para os notebooks \\
 \texttt{checkpoints/}          & Modelos salvos (\texttt{.pth}), sumários (\texttt{.json}) e resultados (\texttt{.csv/.pkl}) \\ \midrule
-\texttt{experimento\_final\_KD\_test.ipynb} & Notebook principal: executa todos os experimentos (Q1--Q5), gera tabelas, gráficos e análise qualitativa \\
-\texttt{guia\_knowledge\_distillation\_t3.ipynb} & Notebook de ablação: investiga Q2 (alvo), Q4 ($\alpha$) e Q5 (RKD); serve como guia de desenvolvimento \\
+\texttt{modelagens\_finais\_knowledge\_distillation.ipynb} & Notebook principal: executa todos os experimentos em relação as perguntas (Q1 a Q5) do trabalho, gera tabelas, gráficos e análise qualitativa. \\
+\texttt{analises\_knowledge\_distillation.ipynb} & Notebook de análises: investiga a pergunta Q2 (alvo), pergunta Q4 ($\alpha$) e pergunta Q5 (RKD); serve como guia de desenvolvimento para o notebook final. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
-  font=\footnotesize,
-  mod/.style={draw, rounded corners=2pt, fill=blue!8,
-              minimum width=2.8cm, minimum height=0.65cm, align=center},
-  nb/.style={draw, rounded corners=2pt, fill=orange!15,
-             minimum width=3.8cm, minimum height=0.65cm, align=center},
-  ck/.style={draw, rounded corners=2pt, fill=green!10,
-             minimum width=2.2cm, minimum height=0.65cm, align=center},
-  arr/.style={-Stealth, gray, thin},
-  grp/.style={draw=gray!50, dashed, rounded corners=5pt, inner sep=6pt}
+    % --- Definição dos Estilos dos Blocos ---
+    base/.style={
+        draw=black!70, 
+        rounded corners=3pt, 
+        minimum width=3.2cm, 
+        minimum height=0.7cm, 
+        font=\sffamily\small,
+        align=center,
+        fill opacity=0.9
+    },
+    model/.style={base, fill=blue!10},
+    core/.style={base, fill=blue!10},
+    main/.style={base, fill=red!15, minimum height=0.9cm, font=\sffamily\small\bfseries},
+    checkpoint/.style={base, fill=green!15, minimum width=2.5cm},
+    % Ajustado para caixas maiores e mais altas para caberem os novos nomes:
+    notebook/.style={base, fill=orange!15, minimum width=4.6cm, minimum height=1.2cm, inner ysep=6pt},
+    % --- Estilo das Setas ---
+    arrow/.style={->, >=Stealth, draw=black!60, thick, rounded corners=4pt}
 ]
 
-%% coluna esquerda: modelos
-\node[mod] (blocks)    {blocks.py};
-\node[mod, below=0.4cm of blocks]  (enc)   {encoders.py};
-\node[mod, below=0.4cm of enc]     (pred)  {predictors.py};
-\node[mod, below=0.4cm of pred]    (teach) {teacher.py};
+    % --- 1. Coluna Models (Esquerda) ---
+    \node[model] (blocks) {blocks.py};
+    \node[model, below=0.4cm of blocks] (encoders) {encoders.py};
+    \node[model, below=0.4cm of encoders] (predictors) {predictors.py};
+    \node[model, below=0.4cm of predictors] (teacher) {teacher.py};
 
-%% coluna central: lógica
-\node[mod, right=2.2cm of blocks]  (loss)  {losses.py};
-\node[mod, right=2.2cm of enc]     (train) {trainer.py};
-\node[mod, right=2.2cm of pred]    (eval)  {evaluator.py};
-\node[mod, right=2.2cm of teach]   (data)  {load\_datasets.py};
+    % Caixa pontilhada ao redor de models/ com o texto EM CIMA (north west)
+    \begin{scope}[on background layer]
+        \node[draw=black!50, dashed, rounded corners=5pt, fit=(blocks) (teacher), 
+              label={[font=\sffamily\small, anchor=south west]north west:\textbf{models/}}, 
+              inner sep=8pt] (models_box) {};
+    \end{scope}
 
-%% kd_run no centro
-\node[mod, right=2.2cm of train, fill=purple!10]   (kdrun) {kd\_run.py};
+    % --- 2. Coluna Core / Treinamento (Centro) ---
+    \node[core, right=1.8cm of blocks] (losses) {losses.py};
+    \node[core, below=0.4cm of losses] (trainer) {trainer.py};
+    \node[core, below=0.4cm of trainer] (evaluator) {evaluator.py};
+    \node[core, below=0.4cm of evaluator] (datasets) {load\_datasets.py};
 
-%% notebooks
-\node[nb, above right=0.2cm and 1.5cm of kdrun]  (nb1) {experimento\_final\\\_KD\_test.ipynb};
-\node[nb, below right=0.2cm and 1.5cm of kdrun]  (nb2) {guia\_KD\_t3.ipynb};
+    % --- 3. Centralizador e Checkpoints (Direita) ---
+    \node[main, right=1.5cm of trainer] (kdrun) {kd\_run.py};
+    \node[checkpoint, below=0.6cm of kdrun] (checkpoints) {checkpoints/};
 
-%% checkpoints
-\node[ck, below=0.6cm of kdrun] (ck) {checkpoints/};
+    % --- 4. Coluna Notebooks (Extrema Direita) - Nomes Atualizados ---
+    % Aumentado o yshift (+0.9 e -1.1) para dar mais respiro entre as caixas maiores
+    \node[notebook, right=1.5cm of kdrun, yshift=0.9cm] (exp) {modelagens\_finais\_\\knowledge\_distillation\\.ipynb};
+    \node[notebook, right=1.5cm of kdrun, yshift=-1.1cm] (guia) {analises\_knowledge\_\\distillation.ipynb};
 
-%% arestas models -> trainer
-\draw[arr] (blocks) -- (enc);
-\draw[arr] (enc)    -| (train);
-\draw[arr] (pred)   -| (train);
-\draw[arr] (teach)  -| (train);
-\draw[arr] (loss)   -- (train);
-\draw[arr] (teach)  -| (eval);
-\draw[arr] (pred)   -| (eval);
-\draw[arr] (data)   -| (train);
-\draw[arr] (data)   -| (eval);
+    % ==========================================
+    % --- CONEXÕES (SETAS SEM SOBREPOSIÇÃO) ---
+    % ==========================================
 
-%% kd_run
-\draw[arr] (train)  -- (kdrun);
-\draw[arr] (eval)   -| (kdrun);
-\draw[arr] (loss)   |- (kdrun);
-\draw[arr] (enc)    |- (kdrun);
-\draw[arr] (pred)   |- (kdrun);
-\draw[arr] (teach)  |- (kdrun);
-\draw[arr] (data)   |- (kdrun);
+    % Fluxo vertical em models/
+    \draw[arrow] (blocks) -- (encoders);
+    
+    % Fluxo vertical na coluna central
+    \draw[arrow] (losses) -- (trainer);
+    \draw[arrow] (datasets) -- (evaluator);
+    \draw[arrow] (evaluator) -- (trainer);
 
-%% notebooks -> kd_run
-\draw[arr] (kdrun)  -- (nb1);
-\draw[arr] (kdrun)  -- (nb2);
+    % Conexões horizontais entre Coluna 1 e Coluna 2
+    \draw[arrow] (encoders) -- (trainer);
+    \draw[arrow] (predictors) -- (evaluator);
+    
+    % Conexão de teacher.py para load_datasets.py (passando por baixo)
+    \draw[arrow] (teacher.south) -- ++(0,-0.3) -| (datasets.south);
 
-%% checkpoints
-\draw[arr] (train)  -- (ck);
+    % Conexões para o kd_run.py (Centralizador)
+    \draw[arrow] (trainer) -- (kdrun);
+    
+    % Evaluator conectando ao kd_run com curva limpa por cima do checkpoint
+    \draw[arrow] (evaluator.east) -| ++(0.6,0) |- (kdrun.190);
 
-%% grouping
-\begin{scope}[on background layer]
-  \node[grp, fit=(blocks)(enc)(pred)(teach), label=above left:{\footnotesize models/}] {};
-\end{scope}
+    % Conexões com Checkpoints
+    \draw[arrow] (trainer.south east) -- ++(0.4,-0.4) -| (checkpoints.north);
+    \draw[arrow] (checkpoints) -- (kdrun);
+
+    % Conexões finais para os novos Notebooks
+    \draw[arrow] (kdrun.east) -- ++(0.4,0) |- (exp.west);
+    \draw[arrow] (kdrun.east) -- ++(0.4,0) |- (guia.west);
 
 \end{tikzpicture}
-\caption{Dependências entre módulos. O \texttt{kd\_run.py} centraliza as
-  re-exportações; os notebooks importam exclusivamente por ele. As setas
-  indicam dependência de importação.}
-\label{fig:modulos}
+\caption{Dependências entre módulos. O \texttt{kd\_run.py} centraliza as re-exportações, os notebooks importam exclusivamente por ele. As setas indicam dependência de importação.}
+\label{fig:dependencias_modulos}
 \end{figure}
 
-\paragraph{Sobre os notebooks.}
-O \texttt{experimento\_final\_KD\_test.ipynb} é o notebook principal de entrega:
-executa as Fases 1--3 para todas as combinações teacher/dataset, responde às
-questões Q1, Q3 e Q5, gera os gráficos finais, a análise qualitativa (exemplos
-de predição e t-SNE) e o relatório consolidado. Possui células de checkpoint que
+\subsubsection{Sobre os notebooks}
+O \texttt{modelagens\_finais\_knowledge\_distillation.ipynb} é o notebook principal: executa as Fases 1 até a 3 para todas as combinações de teacher e dataset, respondendo as
+questões Q1, Q3 e Q5 do trabalho, gera os gráficos finais, a análise qualitativa (exemplos
+de predição e t-SNE), além disso têm células de checkpoint que
 permitem retomar qualquer seção sem re-treinar. O
-\texttt{guia\_knowledge\_distillation\_t3.ipynb} é um notebook exploratório que
-documentou as ablações de Q2 (representação alvo) e Q4 (coeficiente $\alpha$) e
-serviu de referência de desenvolvimento para o notebook principal.
+\texttt{analises\_knowledge\_distillation.ipynb} é um notebook exploratório que
+no qual analisei as respostas de Q2 (representação alvo) e Q4 (coeficiente $\alpha$), servindo de referência de desenvolvimento para o notebook principal.
 
-\subsection{Dificuldades Encontradas e Soluções Propostas}
+\subsection{Dificuldades Principais Encontradas}
 
-Durante a implementação foram identificados três problemas técnicos
+Durante a implementação foram identificados dois problemas técnicos
 significativos no treinamento com RKD:
 
 \begin{description}
@@ -486,35 +488,28 @@ significativos no treinamento com RKD:
     \texttt{torch.no\_grad()}, o que impedia o fluxo de gradiente da perda CE
     até o student. A loss efetiva era apenas $\mathcal{L}_{RKD}$, insuficiente
     para guiar o espaço de features em direção ao classificador do teacher.
-    \textit{Solução:} remover o contexto \texttt{no\_grad} da computação dos
-    logits e desabilitar o cálculo de gradiente apenas nos parâmetros do
+    A solução encontrada foi remover o contexto \texttt{no\_grad} da computação dos logits e desabilitar o cálculo de gradiente apenas nos parâmetros do
     classificador do teacher com \texttt{requires\_grad\_(False)}.
 
   \item[Problema 2 — Coeficiente $\alpha_{CE}$ subestimado:]
     O valor padrão de \texttt{alpha\_ce} era 0,3, tornando CE secundária em
     relação à RKD. O artigo de \textcite{park2019rkd} formula explicitamente
     $\mathcal{L} = \mathcal{L}_{CE} + \lambda \mathcal{L}_{RKD}$, com CE como
-    sinal primário. \textit{Solução:} alterar para \texttt{alpha\_ce=1.0}.
+    sinal primário. Alternando para \texttt{alpha\_ce=0.5} melhorou a convergência dos modelos.
 
-  \item[Problema 3 — Cache de módulos Python:]
-    Após editar \texttt{trainer.py} com o kernel já ativo, o Python reutilizava
-    o módulo em cache, fazendo com que o notebook executasse o código anterior
-    ao bug fix. \textit{Solução:} inserir célula de \texttt{importlib.reload}
-    antes de cada re-execução da Seção~6 (Q5).
 \end{description}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% SEÇÃO 3 — RESULTADOS %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Resultados e Discussão}
 
-\subsection{Q1 — Qual Teacher Transfere Melhor?}
+\subsection{Questão 1 - Qual Teacher transfere melhor?}
 \label{sec:q1}
 
 A Tabela~\ref{tab:q1} apresenta as acurácias top-1 e top-5 no conjunto de teste
-obtidas pelos students treinados por 50 épocas com a melhor arquitetura identificada
-para cada teacher (PlainCNN como baseline de ablação; Depthwise/PlainCNN como encoder
+obtidas pelos students treinados por 50 épocas com a melhor arquitetura identificada para cada teacher (PlainCNN como baseline do notebook de exploração; Depthwise/PlainCNN como encoder
 definitivo). Os professores foram treinados na Fase~1 por 15 épocas com encoder
-congelado; suas acurácias de teste estão na Tabela~\ref{tab:fase1}.
+congelado; suas acurácias de teste estão na Tabela~\ref{tab:fase1}.\\
 
 \begin{table}[htb]
 \centering
@@ -531,7 +526,7 @@ ConvNeXt-Small  & 49,53 & 768  & 86,9\% & 93,3\% \\ \bottomrule
 
 \begin{table}[htb]
 \centering
-\caption{Q1 — Acurácia top-1 e top-5 do student após Fase~3 (50 épocas, melhor encoder).}
+\caption{Q1. Acurácia top-1 e top-5 do student após Fase~3 (50 épocas, melhor encoder).}
 \label{tab:q1}
 \begin{tabular}{@{}llcccc@{}}
 \toprule
@@ -550,6 +545,10 @@ top-1), seguido por VGG-16 (27,7\%) e ConvNeXt-Small (6,6\%). A fraca
 transferência do ConvNeXt é atribuída à sua representação pós-GAP passar por
 \textit{LayerNorm} antes do classificador, o que gera uma distribuição de
 features diferente das convencionais, dificultando a imitação pelo student.
+Além disso, o treino definitivo do ConvNeXt/Flowers (50 épocas) convergiu de forma
+instável e sofreu \textit{early-stopping} já na época~6 (melhor acc.\ val.\
+$\approx$9,3\%), de modo que o valor de 6,6\% subestima seu potencial: o mesmo
+par em 30 épocas (Tabela~\ref{tab:q3}) alcançou 16,0\%.
 
 Para o Oxford-IIIT-Pet (\textbf{37 classes}), o VGG-16 surpreende ao
 superar o ResNet-50 (37,7\% vs 24,0\%), possivelmente por seu espaço de
@@ -560,44 +559,45 @@ $\approx 94$--$98\%$ em todos os casos.
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{fig_q1}
-\caption{Q1 — Acurácia top-1 (azul escuro) e top-5 (azul claro) por teacher
+\caption{Acurácia top-1 (azul escuro) e top-5 (azul claro) por teacher
   em cada dataset. O ResNet-50 transfere melhor para o Flowers-102 e o VGG-16
-  surpreende no Oxford-IIIT-Pet.}
+  surpreende no Oxford-IIIT-Pet}
 \label{fig:q1}
 \end{figure}
 
-\subsection{Q2 — Representação Alvo: pre-GAP vs.\ post-GAP}
+\subsection{Questão 2 - Representação alvo: pre-GAP vs.\ post-GAP}
 \label{sec:q2}
 
-Ablação conduzida no \texttt{guia\_knowledge\_distillation\_t3.ipynb} com
-ResNet-50/Flowers-102 (PlainCNN, 30 épocas). O alvo post-GAP
+No notebook de exploração foi utilizado ResNet-50/Flowers-102 (PlainCNN, 30 épocas). O alvo post-GAP
 (vetor $\mathbb{R}^{2048}$) obteve $\approx 24{,}9\%$ de acurácia na
 validação, enquanto o alvo pre-GAP ($7\times7\times2048$) ficou em
-$\approx 10\%$, resultado $\approx 2{,}5\times$ inferior. O preditor
-\texttt{PreditorPostGAP} é significativamente mais leve e estável,
-pois opera sobre um vetor compacto em vez de um mapa de features tridimensional.
-\textbf{post-GAP foi adotado em todos os experimentos subsequentes.}
+$\approx 10\%$, resultado $\approx 2{,}5\times$ inferior. Regredir um mapa
+tridimensional ($7\times7\times2048$) é substancialmente mais difícil e instável
+do que regredir um vetor compacto ($\mathbb{R}^{2048}$) com um MLP; essa maior
+facilidade de otimização — e não o número de parâmetros, que é comparável entre
+as duas variantes — explica a diferença. Por isso o alvo post-GAP foi adotado em
+todos os experimentos seguintes.
 
 \begin{table}[htb]
 \centering
-\caption{Q2 — pre-GAP vs.\ post-GAP (ResNet-50, Flowers-102, PlainCNN, $\alpha{=}0{,}7$, 30 épocas).}
+\caption{pre-GAP vs.\ post-GAP (ResNet-50, Flowers-102, PlainCNN, $\alpha{=}0{,}7$, 30 épocas).}
 \label{tab:q2}
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Alvo & Dimensão do alvo & Params preditor & Melhor Acc.\ Val \\ \midrule
-post-GAP & $\mathbb{R}^{2048}$ (vetor) & $\approx$1,1M & \textbf{$\approx$24,9\%} \\
-pre-GAP  & $\mathbb{R}^{2048\times7\times7}$ (mapa) & $\approx$4,7M & $\approx$10,0\% \\ \bottomrule
+Alvo & Dimensão do alvo & Params student (M) & Melhor Acc.\ Val \\ \midrule
+post-GAP & $\mathbb{R}^{2048}$ (vetor) & $\approx$1,57M & \textbf{$\approx$24,9\%} \\
+pre-GAP  & $\mathbb{R}^{2048\times7\times7}$ (mapa) & $\approx$0,92M & $\approx$10,0\% \\ \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Q3 — Melhor Encoder Student por Teacher}
+\subsection{Questão 3 - Melhor encoder Student por Teacher}
 \label{sec:q3}
 
 A Tabela~\ref{tab:q3} compara os três encoders em Flowers-102 com 30 épocas.
 
 \begin{table}[htb]
 \centering
-\caption{Q3 — Ablação de encoders (Flowers-102, post-GAP, $\alpha{=}0{,}5$, 30 épocas).}
+\caption{Exploração de encoders (Flowers-102, post-GAP, $\alpha{=}0{,}5$, 30 épocas).}
 \label{tab:q3}
 \begin{tabular}{@{}llcc@{}}
 \toprule
@@ -617,54 +617,61 @@ Teacher & Encoder & Params (M) & Acurácia Teste \\ \midrule
 \end{tabular}
 \end{table}
 
-O encoder Depthwise se destaca para o ResNet-50 (melhor acurácia com
+O encoder Depthwise se destaca para o ResNet-50 (obteve a melhor acurácia com
 menos parâmetros), enquanto o PlainCNN é superior para VGG-16 e
 ConvNeXt-Small. Notavelmente, o MiniResNet consistentemente apresenta
 o pior desempenho apesar de ter mais parâmetros, o que sugere que as
-conexões residuais não ajudam quando o teacher possui uma representação
+conexões residuais não ajudam muito quando o teacher possui uma representação
 mais simples ou quando o número de épocas de destilação é limitado.
-A redução de parâmetros alcançada em relação ao teacher varia de
+A redução de parâmetros alcançada em relação ao teacher variou de
 $\mathbf{94{,}8\%}$ (ResNet-50/Depthwise) a $\mathbf{98{,}2\%}$
-(ConvNeXt-Small/PlainCNN).
+(ConvNeXt-Small/PlainCNN); a redução em GFLOPs é ainda maior
+(97,9\%--99,1\%), detalhada na Seção~\ref{sec:eff}.
+
+A Questão~3 pede a melhor arquitetura de \emph{encoder} \textbf{e} de
+\emph{preditor}. Esta seção define o encoder; a arquitetura do \textbf{preditor}
+é investigada na Seção~\ref{sec:s10} (variantes do MLP com
+ativação SiLU e módulo SE), onde a troca de ReLU por SiLU no preditor mostrou-se
+o fator de maior impacto — combinada com o encoder Depthwise, forma a
+configuração final adotada.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{fig_q3}
-\caption{Q3 — Acurácia de teste por encoder para cada teacher (Flowers-102,
-  30 épocas). O encoder vencedor de cada teacher está em negrito.}
+\caption{Acurácia de teste por encoder para cada teacher (Flowers-102,
+  30 épocas)}
 \label{fig:q3}
 \end{figure}
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{fig_guia_analise_q1q3q4}
-\caption{Análise visual Q1/Q3/Q4 gerada pelo \texttt{guia\_knowledge\_distillation\_t3.ipynb}
-  com 30 épocas de ablação: comparação de teachers, encoders e coeficiente~$\alpha$.}
+\caption{Análise visual Q1/Q3/Q4 gerada pelo \texttt{analises\_knowledge\_distillation.ipynb}
+  com 30 épocas de exploração: comparação de teachers, encoders e coeficiente~$\alpha$.}
 \label{fig:guia_analise}
 \end{figure}
 
-\subsection{Q4 — Ablação da Função de Perda ($\alpha$)}
+\subsection{Questão 4 - Análise da Função de Perda ($\alpha$)}
 \label{sec:q4}
 
-Ablação conduzida em \texttt{guia\_knowledge\_distillation\_t3.ipynb}
-(ResNet-50/Flowers-102, PlainCNN, 30 épocas). Os resultados indicam que
-a combinação equilibrada $\alpha{=}0{,}5$ é ótima:
+Olhando o notebook utilizado para a exploração, os resultados indicam que a combinação equilibrada $\alpha{=}0{,}5$ é ótima:
 
 \begin{center}
 \begin{tabular}{@{}ccccc@{}}
 \toprule
 $\alpha$ & 0,0 (CE puro) & 0,5 & 0,7 & 1,0 (MSE puro) \\ \midrule
-Acc. val & $\approx$20\% & $\approx$\textbf{25\%} & $\approx$24\% & $\approx$22\% \\ \bottomrule
+Acc. val & $\approx$0,5\% & $\approx$\textbf{25\%} & $\approx$25\% & $\approx$24\% \\ \bottomrule
 \end{tabular}
 \end{center}
 
-Com $\alpha{=}0$, o student aprende apenas a classificar (sem imitar as
-features), o que prejudica a Fase~3. Com $\alpha{=}1$, o MSE puro alinha
+Com $\alpha{=}0$ (CE pura, sem imitar as features), o treino colapsa
+($\approx$0,5\% de acurácia, abaixo do acaso), confirmando que o sinal de
+imitação de features é indispensável na Fase~3. Com $\alpha{=}1$, o MSE puro alinha
 os valores numéricos das features mas perde o sinal de discriminabilidade
 dado pela CE. O equilíbrio $\alpha{=}0{,}5$ combina os dois objetivos de
 forma complementar e foi adotado em todos os experimentos finais.
 
-\subsection{Q5 — Alinhamento Absoluto (MSE) vs.\ Relacional (RKD)}
+\subsection{Questão 5 - Alinhamento Absoluto (MSE) vs.\ Relacional (RKD)}
 \label{sec:q5}
 
 A Tabela~\ref{tab:q5} apresenta a comparação entre o baseline MSE+CE e o
@@ -673,52 +680,51 @@ esquema RKD+CE, ambos treinados por 30 épocas com ResNet-50/Flowers-102
 
 \begin{table}[htb]
 \centering
-\caption{Q5 — Comparação MSE vs.\ RKD (ResNet-50, Flowers-102, 30 épocas).}
+\caption{Comparação MSE vs.\ RKD (ResNet-50, Flowers-102, 30 épocas).}
 \label{tab:q5}
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Método & O que alinha & Fórmula & Melhor Acc.\ Val \\ \midrule
-MSE baseline & Valores absolutos & $\alpha \cdot \mathrm{MSE} + (1{-}\alpha) \cdot \mathcal{L}_{CE}$ & 4,3\% \\
-\textbf{RKD+CE}  & Estrutura relacional & $\mathcal{L}_{CE} + \mathcal{L}_{RKD}$ & \textbf{38,9\%} \\ \bottomrule
+\textbf{MSE+CE (baseline corrigido)} & Valores absolutos & $\alpha \cdot \mathrm{MSE} + (1{-}\alpha) \cdot \mathcal{L}_{CE}$ & \textbf{39,7\%} \\
+RKD+CE  & Estrutura relacional & $\mathcal{L}_{CE} + \mathcal{L}_{RKD}$ & 38,9\% \\ \bottomrule
 \end{tabular}
 \end{table}
 
-O resultado aponta uma vantagem massiva do RKD (+34,6 p.p.). Parte desta
-diferença é explicada por uma assimetria de implementação: no baseline MSE,
-o cálculo dos logits passa por \texttt{torch.no\_grad()}, o que bloqueia o
-gradiente CE em direção ao student (loss efetiva $\approx \alpha \cdot$MSE
-apenas); no RKD, esse bloqueio foi removido como parte das correções
-implementadas, e a CE flui completamente. O fato de o MSE com gradiente CE
-bloqueado atingir apenas 4,3\% em 30 épocas — comparado a 30,7\% no treino
-definitivo de 50 épocas com mesma loss — revela que o sinal CE é imprescindível
-para que o student aprenda representações discriminativas em um número reduzido
-de épocas. Mesmo desconsiderando essa assimetria, a RKD é esperada de ser
-superior em cenário de \textit{capacity mismatch}, pois sua invariância de escala
-permite ao student organizar o espaço de features de forma autônoma enquanto
-mantém a geometria relacional do teacher.
+Com o baseline \textbf{corrigido} (removendo o \texttt{torch.no\_grad()} que
+bloqueava o gradiente da CE), o MSE+CE e o RKD+CE ficam \textbf{essencialmente
+empatados}: 39,7\% contra 38,9\% de acurácia de validação (RKD $-$0,8~p.p.).
+Esse empate é explicado pela exploração da Seção~\ref{sec:s10},
+em que MSE+CE corrigido (39,7\%) e RKD+CE (39,9\%) diferem por apenas 0,2~p.p.
+
+Verificou-se que, em uma versão \textit{anterior} do baseline (com a CE
+bloqueada), o RKD chegou a parecer muito superior, essa vantagem, porém,
+\textbf{não se sustentou} após a correção do fluxo de gradiente. Portanto, neste
+estudo o RKD \textbf{não} superou o alinhamento absoluto. A expectativa teórica de
+que o RKD seja mais robusto sob \textit{capacity mismatch}, graças à sua
+invariância de escala, que permite ao student organizar o espaço de features de
+forma autônoma preservando a geometria relacional do teacher, mas não foi confirmada empiricamente nas condições testadas.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.7\linewidth]{fig_q5}
-\caption{Q5 — Comparação MSE+CE vs.\ RKD+CE (ResNet-50, Flowers-102, 30 épocas).
-  O RKD supera amplamente o baseline, em parte devido à correção do fluxo CE.}
+\caption{Comparação MSE+CE vs.\ RKD+CE do notebook \emph{exploratório}
+  (ResNet-50, Flowers-102, 30 épocas), \emph{anterior} à correção do fluxo da CE,
+  em que o RKD colapsou. Após a correção, as duas perdas empatam.}
 \label{fig:q5}
 \end{figure}
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.8\linewidth]{fig_guia_q5_rkd}
-\caption{Curvas de convergência MSE vs.\ RKD (\texttt{guia\_knowledge\_distillation\_t3.ipynb}):
-  o RKD converge mais suavemente e atinge acurácia de validação mais alta.}
+\caption{Curvas de convergência MSE vs.\ RKD (\texttt{analises\_knowledge\_distillation.ipynb}):
+  o RKD converge mais suavemente}
 \label{fig:guia_q5}
 \end{figure}
 
-\subsection{Ablação de Estratégias Avançadas e Ativação SiLU}
+\subsection{Análises de estratégias avançadas e ativação SiLU}
 \label{sec:s10}
 
-Para investigar melhorias além do baseline MSE+CE, foi conduzida uma ablação
-com seis variantes de função de perda e arquitetura do preditor, usando
-ResNet-50/Flowers-102 com 30~épocas (Seção~10 do notebook principal).
+Para investigar melhorias além do baseline MSE+CE, foi analisado seis variantes de função de perda e arquitetura do preditor, usando ResNet-50/Flowers-102 com 30~épocas (Seção~10 do notebook principal).
 A Tabela~\ref{tab:s10} e a Figura~\ref{fig:s10} resumem os resultados.
 
 \begin{table}[htb]
@@ -741,7 +747,7 @@ A substituição da ativação ReLU por SiLU~\cite{ramachandran2017swish} no
 preditor MLP foi a única variante com ganho significativo (+3,2~p.p.),
 atingindo 42,9\% na validação. A SiLU é definida por
 $\mathrm{SiLU}(x) = x \cdot \sigma(x)$, onde $\sigma(\cdot)$ é a sigmoide:
-at contrário da ReLU, possui gradientes suaves em toda sua extensão e
+ao contrário da ReLU, possui gradientes suaves em toda sua extensão e
 ativa fracamente valores negativos, o que melhora o fluxo de gradientes em
 redes com poucos parâmetros. As demais variantes (CosineKD, CKA, SE-Atenção)
 ficaram próximas ao baseline, indicando que o gargalo principal está na
@@ -750,20 +756,19 @@ capacidade de representação do preditor, não na função de perda.
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{fig_s10_ablacao}
-\caption{Seção~10 — Ablação: barras de melhor acc\_val (esq.) e curvas de
+\caption{Seção~10 - barras de melhor acc\_val (esq.) e curvas de
   convergência por época (dir.). MSE+CE+SiLU (laranja) converge mais rápido
   e atinge o maior valor.}
 \label{fig:s10}
 \end{figure}
 
-\paragraph{Treinamento definitivo com SiLU (50 épocas).}
-O encoder Depthwise com preditor SiLU foi treinado por 50~épocas em ambos
-os datasets (Seção~11). A Tabela~\ref{tab:s11} compara com a versão ReLU
-de 50~épocas.
+\subsubsection{Treinamento definitivo com SiLU (50 épocas)}
+O encoder Depthwise com preditor SiLU foi treinado por 50~épocas em ambos os datasets (Seção~11). A Tabela~\ref{tab:s11} compara com a versão ReLU de 50~épocas.  A SiLU melhora de forma consistente em ambos os datasets. As métricas top-5
+são mais altas: 71,6\% e 70,7\%, respectivamente. Em problemas com muitas classes semânticamente próximas, como o Flowers-102 com 102 categorias, o top-5 é uma métrica complementar importante \cite{russakovsky2015imagenet}, pois indica se o student hesita entre categorias vizinhas (erro estruturado) ou comete erros aleatórios. Os valores de top-5 acima de 70\% com top-1 de 44\% sugerem que a maioria dos erros são de vizinhança semântica, e não aleatórios, consistente com a transferência de estrutura relacional do teacher \cite{vanhorn2018inaturalist}.
 
 \begin{table}[htb]
 \centering
-\caption{Seção~11 — ReLU vs.\ SiLU, ResNet-50/Depthwise (50 épocas).}
+\caption{Seção~11 - ReLU vs.\ SiLU, ResNet-50/Depthwise (50 épocas).}
 \label{tab:s11}
 \begin{tabular}{@{}llcccc@{}}
 \toprule
@@ -777,68 +782,54 @@ Dataset & Ativação & Acc.\ Val & Top-1 Teste & Top-5 Teste & $\Delta$ Top-1 \\
 \end{tabular}
 \end{table}
 
-A SiLU melhora de forma consistente em ambos os datasets. As métricas top-5
-são notavelmente altas: 71,6\% e 70,7\%, respectivamente. Em problemas com
-muitas classes semanticamente próximas --- como o Flowers-102 com 102
-categorias --- o top-5 é uma métrica complementar importante
-\cite{russakovsky2015imagenet}: indica se o student \textit{hesita} entre
-categorias vizinhas (erro estruturado) ou comete erros aleatórios. Os valores
-de top-5 acima de 70\% com top-1 de 44\% sugerem que a maioria dos erros são
-de vizinhança semântica, e não aleatórios, consistente com a transferência de
-estrutura relacional do teacher \cite{vanhorn2018inaturalist}.
-
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{fig_s11_silu}
-\caption{Seção~11 — Curvas de convergência ReLU vs.\ SiLU (ResNet-50,
-  encoder Depthwise, 50~épocas). O preditor SiLU converge mais rápido e
-  atinge patamares superiores em ambos os datasets.}
+\caption{Seção~11 - Curvas de convergência ReLU vs.\ SiLU (ResNet-50, encoder Depthwise, 50~épocas). O preditor SiLU converge mais rápido e atinge patamares superiores em ambos os datasets.}
 \label{fig:s11}
 \end{figure}
 
 \subsection{Eficiência Computacional}
+\label{sec:eff}
 
 \begin{table}[htb]
 \centering
-\caption{Redução de parâmetros dos students em relação ao teacher (Flowers-102).}
+\caption{Redução de \textbf{parâmetros} e \textbf{GFLOPs} dos students em relação
+  ao teacher (Flowers-102). GFLOPs medidos para entrada $224\times224$.}
 \label{tab:eff}
-\begin{tabular}{@{}llccc@{}}
+\begin{tabular}{@{}llcccccc@{}}
 \toprule
-Teacher & Encoder & Teacher (M) & Student (M) & Redução \\ \midrule
-ResNet-50       & Depthwise & 23,72 & 1,23 & $-94,8\%$ \\
-VGG-16          & PlainCNN  & 14,77 & 0,78 & $-94,7\%$ \\
-ConvNeXt-Small  & PlainCNN  & 49,53 & 0,91 & $-98,2\%$ \\ \bottomrule
+\multirow{2}{*}{Teacher} & \multirow{2}{*}{Encoder}
+  & \multicolumn{3}{c}{Parâmetros (M)} & \multicolumn{2}{c}{GFLOPs} & \multirow{2}{*}{$\Delta$ GFLOPs} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-7}
+ & & Teacher & Student & Redução & Teacher & Student & \\ \midrule
+ResNet-50       & Depthwise & 23,72 & 1,23 & $-94,8\%$ & 4,11  & 0,035 & $-99,1\%$ \\
+VGG-16          & PlainCNN  & 14,77 & 0,78 & $-94,7\%$ & 15,35 & 0,186 & $-98,8\%$ \\
+ConvNeXt-Small  & PlainCNN  & 49,53 & 0,91 & $-98,2\%$ & 8,71  & 0,186 & $-97,9\%$ \\ \bottomrule
 \end{tabular}
 \end{table}
 
 Todos os students alcançam reduções entre 94,7\% e 98,2\% no número de
-parâmetros em relação ao teacher, atendendo ao requisito do enunciado de
-``saving GFLOPs and parameters considerably''. O encoder Depthwise economiza
-adicionalmente em operações de convolução por utilizar separabilidade
-em profundidade \cite{howard2017mobilenets}.
+parâmetros \emph{e} entre 97,9\% e 99,1\% em \textbf{GFLOPs} em relação ao teacher,
+atendendo ao requisito do enunciado de ``saving GFLOPs and parameters
+considerably''. A economia de GFLOPs é mais expressiva que a dos
+parâmetros: o student Depthwise/ResNet-50, por exemplo, custa apenas 0,035~GFLOPs
+contra 4,11 do teacher ($\approx$117$\times$ menos). O encoder Depthwise economiza em operações de convolução por utilizar separabilidade em
+profundidade \cite{howard2017mobilenets}.
 
 \subsection{Análise Qualitativa}
 
-As Figuras~\ref{fig:pred_flowers} e~\ref{fig:pred_pets} mostram predições
+A Figura ~\ref{predicoespetsflowers} mostra predições
 do teacher (ResNet-50) e do student (encoder Depthwise + preditor SiLU)
 no conjunto de teste. Bordas verdes indicam que ambos acertaram; laranja,
 que apenas o teacher acertou; vermelho, que ambos erraram.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{fig_predicoes_flowers}
-\caption{Predições teacher vs.\ student — ResNet-50 SiLU, Flowers-102.
-  Borda verde = ambos certos; laranja = só teacher; vermelho = ambos errados.}
-\label{fig:pred_flowers}
-\end{figure}
-
-\begin{figure}[htb]
-\centering
-\includegraphics[width=\linewidth]{fig_predicoes_pets}
-\caption{Predições teacher vs.\ student — ResNet-50 SiLU, Oxford-IIIT-Pet.
-  O student acerta a maioria das raças de cães e gatos onde o teacher
-  também acerta.}
-\label{fig:pred_pets}
+\includegraphics[width=\linewidth]{fig_predicoespetsflowers.png}
+\caption{Predições teacher vs.\ student, ResNet-50 SiLU, Flowers-102 e Oxford-IIIT-Pet.O student acerta a maioria das raças de gatos onde o teacher
+  também acerta. Para flowers já é mais complicado}
+\label{predicoespetsflowers}
 \end{figure}
 
 Observa-se que o student tende a acertar nas classes com maior variância
@@ -862,34 +853,33 @@ students por teacher no Flowers-102 ao longo das 50~épocas.
 
 Este trabalho implementou um sistema de destilação de conhecimento baseada em
 features intermediárias, transferindo representações de três redes pré-treinadas
-(VGG-16, ResNet-50 e ConvNeXt-Small) para encoders leves treinados do zero.
-Os principais achados são:
+(VGG-16, ResNet-50 e ConvNeXt-Small) para encoders leves treinados do zero. As principais conclusões são:
 
 \begin{enumerate}
-  \item \textbf{Q1 — Teacher:} O ResNet-50 transfere melhor para o Flowers-102
+  \item \textbf{Q1 - Teacher:} O ResNet-50 transfere melhor para o Flowers-102
     (30,7\%), enquanto o VGG-16 surpreende no Oxford-IIIT-Pet (37,7\%). O
     ConvNeXt-Small tem dificuldade de transferência, possivelmente pela
     normalização não-padrão de suas features.
 
-  \item \textbf{Q2 — Alvo:} Representações post-GAP superam pre-GAP por fator
+  \item \textbf{Q2 - Alvo:} Representações post-GAP superam pre-GAP por fator
     $\approx$2,5× e são computacionalmente mais econômicas para o preditor.
 
-  \item \textbf{Q3 — Encoder:} O Depthwise é melhor para ResNet-50 (alta
-    dimensionalidade de features); o PlainCNN é melhor para VGG-16 e ConvNeXt.
+  \item \textbf{Q3 - Encoder:} O Depthwise é melhor para ResNet-50 (alta
+    dimensionalidade de features), o PlainCNN é melhor para VGG-16 e ConvNeXt.
     O MiniResNet é consistentemente inferior, sugerindo que conexões residuais
     requerem mais épocas para convergir no contexto de destilação.
 
-  \item \textbf{Q4 — Perda:} $\alpha{=}0{,}5$ é o melhor equilíbrio entre MSE
+  \item \textbf{Q4 - Perda:} $\alpha{=}0{,}5$ é o melhor equilíbrio entre MSE
     e CE, confirmando que os dois objetivos são complementares.
 
-  \item \textbf{Q5 — RKD:} A destilação relacional (RKD+CE) é amplamente
-    superior ao alinhamento absoluto (MSE), o que é consistente com a teoria:
-    em cenários de grande assimetria de capacidade, preservar a estrutura
-    geométrica relacional é mais robusto do que imitar valores absolutos de
-    features.
+  \item \textbf{Q5 - RKD:} Com o baseline corrigido, a destilação relacional
+    (RKD+CE, 38,9\%) e o alinhamento absoluto (MSE+CE, 39,7\%) ficam
+    \textbf{empatados}; o RKD não apresentou vantagem empírica. A hipótese
+    teórica de maior robustez do RKD sob assimetria de capacidade permanece
+    plausível, mas não foi confirmada nas condições testadas.
 
   \item \textbf{SiLU:} A substituição da ativação ReLU por SiLU no preditor
-    MLP produziu o maior ganho individual de todos os experimentos: +8,1\% na
+    MLP produziu o maior ganho individual de todos os experimentos: +3,2~p.p.\ (${\approx}$8,1\% relativo) na
     ablação de 30~épocas e +13,4/+9,9~p.p.\ no treinamento definitivo de
     50~épocas (44,1\% Flowers-102 e 33,9\% Oxford-IIIT-Pet). A SiLU supera
     todas as variantes de função de perda testadas, indicando que a capacidade
@@ -908,7 +898,7 @@ proposto para compressão de modelos.
     comparação MSE vs.\ RKD seja justa. Isso também potencialmente melhoraria
     os resultados finais de Q1/Q3.
 
-  \item \textbf{Destilação progressiva (curriculum):} Iniciar com MSE para
+  \item \textbf{Destilação progressiva:} Iniciar com MSE para
     alinhar o espaço de features e depois introduzir RKD, explorando o melhor
     dos dois esquemas de perda.
 
@@ -916,11 +906,11 @@ proposto para compressão de modelos.
     amostras de treino (splits oficiais), o que favorece overfitting. Aplicar
     RandAugment ou MixUp pode melhorar significativamente a generalização.
 
-  \item \textbf{Encoders com atenção:} A ablação de Seção~10 testou SE-blocks
+  \item \textbf{Encoders com atenção:} A Análise de Seção~10 testou SE-blocks
     \cite{hu2018squeeze} no preditor e obteve 39,5\% (igual ao Cosine+CE),
     sem ganho sobre o baseline MSE+CE (39,7\%). Explorar CBAM ou atenção
-    combinada com ajuste de taxa de aprendizado específico pode ser mais
-    promissor.
+    combinada com ajuste de taxa de aprendizado específico também pode ser mais
+    promissor para melhor mais a modelagem.
 
   \item \textbf{Destilação multi-camada:} Em vez de usar apenas a camada
     post-GAP, incorporar destilação em múltiplas camadas intermediárias

@@ -73,7 +73,7 @@ def plotar_curvas(historico, titulo="", overfitting_threshold=0.15):
 
 
 def plotar_comparacao_mse_rkd(resultados_comp, teacher_nome, dataset_nome):
-    # Plota a comparação de curvas de validação entre MSE baseline e RKD.
+    # plota a comparação de curvas de validação entre MSE baseline e RKD.
     plt.figure(figsize=(8, 4))
     for nome, res in resultados_comp.items():
         plt.plot(res['accs_vl'], label=f"{nome} (melhor={res['melhor_acc']:.3f})")
@@ -86,7 +86,7 @@ def plotar_graficos_analise(df_resultados):
     """
     Gráficos de análise final respondendo Q1, Q3 e Q4:
       - Q1: comparação de teachers
-      - Q4: ablação do peso alpha
+      - Q4: exploração do peso alpha
       - Q3: trade-off acurácia vs parâmetros
     """
     fig, axes = plt.subplots(1, 3, figsize=(16, 5))

@@ -87,16 +87,16 @@ class TeacherWrapper(nn.Module):
         print(f"Encoder {self.backbone_name} congelado.")
 
     def get_pre_gap(self, x):
-        # Retorna feature map espacial antes do GAP: [B, C, 7, 7]
+        # retorna feature map espacial antes do GAP: [B, C, 7, 7]
         return self.encoder(x)
 
     def get_post_gap(self, x):
-        # Retorna vetor comprimido após o GAP: [B, C]
+        # retorna vetor comprimido após o GAP: [B, C]
         feat = self.encoder(x)
         return self.gap(feat).flatten(1)
 
     def forward(self, x):
-        # Forward completo: encoder -> gap -> classificador -> logits
+        # forward completo: encoder -> gap -> classificador -> logits
         feat   = self.encoder(x)
         pooled = self.gap(feat).flatten(1)
         return self.classifier(pooled)
